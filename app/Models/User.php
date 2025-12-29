@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -16,25 +19,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'phone',
-        'preferred_language',
-        'address_line_1',
-        'address_line_2',
-        'city',
-        'state',
-        'postal_code',
-        'country',
-        'provider',
-        'provider_id',
         'role',
-        'user_type',
-        'registration_source',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
-        'provider_id',
     ];
 
     protected function casts(): array
@@ -42,37 +32,22 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'registration_source' => 'array',
+            'role' => UserRole::class,
         ];
     }
 
-    public function isAdmin(): bool
+    public function candidateProfile(): HasOne
     {
-        return $this->role === 'admin';
+        return $this->hasOne(CandidateProfile::class);
     }
 
-    public function hasCompleteAddress(): bool
+    public function authoredNotes(): HasMany
     {
-        return $this->address_line_1
-            && $this->city
-            && $this->state
-            && $this->postal_code
-            && $this->country;
+        return $this->hasMany(ApplicationNote::class, 'author_id');
     }
 
-    public function getAddressAttribute(): ?array
+    public function referralsSent(): HasMany
     {
-        if (! $this->hasCompleteAddress()) {
-            return null;
-        }
-
-        return [
-            'line_1' => $this->address_line_1,
-            'line_2' => $this->address_line_2,
-            'city' => $this->city,
-            'state' => $this->state,
-            'postal_code' => $this->postal_code,
-            'country' => $this->country,
-        ];
+        return $this->hasMany(Referral::class, 'referrer_id');
     }
 }

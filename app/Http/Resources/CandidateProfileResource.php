@@ -29,6 +29,7 @@ class CandidateProfileResource extends JsonResource
             'linkedin_url' => $this->linkedin_url,
             'bio' => $this->bio,
             'has_cv' => !is_null($this->cv_path),
+            'profile_image_url' => $this->profile_image_url,
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

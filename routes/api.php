@@ -30,6 +30,16 @@ Route::get('/', function () {
     ]);
 });
 
+// Status endpoint for testing connectivity and CSRF
+Route::get('/status', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String(),
+        'app' => config('app.name'),
+        'environment' => config('app.env'),
+    ]);
+});
+
 // Auth routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', RegisterController::class);
@@ -57,6 +67,8 @@ Route::middleware(['auth:sanctum', 'role:candidate'])->prefix('candidate')->grou
     Route::post('/profile/cv', [ProfileController::class, 'uploadCv']);
     Route::delete('/profile/cv', [ProfileController::class, 'deleteCv']);
     Route::get('/profile/cv', [ProfileController::class, 'downloadCv']);
+    Route::post('/profile/image', [ProfileController::class, 'uploadProfileImage']);
+    Route::delete('/profile/image', [ProfileController::class, 'deleteProfileImage']);
 
     // Applications
     Route::get('/applications', [ApplicationController::class, 'index']);

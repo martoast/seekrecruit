@@ -26,7 +26,17 @@ class CandidateProfile extends Model
         'phone',
         'linkedin_url',
         'bio',
+        'profile_image',
     ];
+
+    public function getProfileImageUrlAttribute(): ?string
+    {
+        if (!$this->profile_image) {
+            return null;
+        }
+
+        return asset('storage/profile-images/' . $this->profile_image);
+    }
 
     protected function casts(): array
     {

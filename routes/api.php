@@ -102,9 +102,14 @@ Route::middleware(['auth:sanctum', 'role:jae_staff'])->prefix('admin')->group(fu
 
     // Positions
     Route::get('/positions', [AdminPositionController::class, 'index']);
+    Route::get('/positions/{position}', [AdminPositionController::class, 'show']);
     Route::post('/positions', [AdminPositionController::class, 'store']);
     Route::put('/positions/{position}', [AdminPositionController::class, 'update']);
     Route::delete('/positions/{position}', [AdminPositionController::class, 'destroy']);
+    Route::post('/positions/{position}/image', [AdminPositionController::class, 'uploadImage']);
+    Route::delete('/positions/{position}/image', [AdminPositionController::class, 'deleteImage']);
+    Route::post('/positions/{position}/company-logo', [AdminPositionController::class, 'uploadCompanyLogo']);
+    Route::delete('/positions/{position}/company-logo', [AdminPositionController::class, 'deleteCompanyLogo']);
 
     // Stats
     Route::get('/stats', StatsController::class);

@@ -17,7 +17,26 @@ class Position extends Model
         'requirements',
         'location',
         'is_active',
+        'image',
+        'company_name',
+        'company_logo',
     ];
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+        return asset('storage/position-images/' . $this->image);
+    }
+
+    public function getCompanyLogoUrlAttribute(): ?string
+    {
+        if (!$this->company_logo) {
+            return null;
+        }
+        return asset('storage/company-logos/' . $this->company_logo);
+    }
 
     protected function casts(): array
     {

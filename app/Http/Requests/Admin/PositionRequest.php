@@ -19,6 +19,7 @@ class PositionRequest extends FormRequest
             'requirements' => ['required', 'string'],
             'location' => ['required', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
+            'company_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

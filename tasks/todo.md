@@ -1,558 +1,120 @@
-# Seek & Recruit Network — Laravel API Development Plan
+# Seek & Recruit — Laravel Monolith Refactor
 
-## Project Overview
-
-Seek & Recruit is a private recruitment platform for JAE Tijuana to manage engineering talent from local universities. The API serves two main user types: **Candidates** (students/graduates looking for jobs) and **JAE Staff** (recruiters/HR who manage the hiring pipeline).
-
-The core flow: candidates register, build their profile, upload a CV, and apply to positions. JAE staff can filter candidates, move them through a hiring pipeline, schedule interviews, and add internal notes.
+Consolidating the Nuxt 3 SPA into the Laravel app so everything lives in one repo. Converting the API into a traditional server-rendered Laravel + Blade app with Tailwind.
 
 ---
 
-## Tech Stack
+## Architecture decisions
 
-- Laravel 11
-- MySQL 8
-- Laravel Sanctum for API authentication
-- Laravel Storage for CV file uploads (digital ocean bucket or local)
-- Laravel Notifications for email
-
----
-
-## Database Schema
-
-### users
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| name | string | |
-| email | string | unique |
-| password | string | |
-| role | enum | `candidate`, `jae_staff` |
-| email_verified_at | timestamp | nullable |
-| created_at | timestamp | |
-| updated_at | timestamp | |
-
-### candidate_profiles
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| user_id | bigint | FK → users |
-| university | string | |
-| degree | string | engineering field |
-| semester | integer | nullable, current semester |
-| graduation_year | integer | nullable |
-| skills | json | array of skill strings |
-| cv_path | string | nullable, file path |
-| location | string | city/zone |
-| age | integer | nullable |
-| gender | enum | `male`, `female`, `other`, `prefer_not_to_say` |
-| phone | string | nullable |
-| linkedin_url | string | nullable |
-| bio | text | nullable, short intro |
-| created_at | timestamp | |
-| updated_at | timestamp | |
-
-### positions
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| title | string | |
-| description | text | |
-| requirements | text | |
-| location | string | |
-| is_active | boolean | default true |
-| created_at | timestamp | |
-| updated_at | timestamp | |
-
-### applications
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| candidate_id | bigint | FK → candidate_profiles |
-| position_id | bigint | FK → positions |
-| status | enum | see below |
-| created_at | timestamp | |
-| updated_at | timestamp | |
-
-**Application statuses:** `registered`, `preselected`, `interview`, `evaluation`, `finalist`, `hired`, `discarded`
-
-### interviews
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| application_id | bigint | FK → applications |
-| scheduled_at | datetime | |
-| location | string | nullable, room or link |
-| type | enum | `technical`, `hr`, `final` |
-| notes | text | nullable, internal notes |
-| created_at | timestamp | |
-| updated_at | timestamp | |
-
-### application_notes
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| application_id | bigint | FK → applications |
-| author_id | bigint | FK → users (JAE staff) |
-| content | text | |
-| created_at | timestamp | |
-
-### referrals
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint | PK |
-| referrer_id | bigint | FK → users (who referred) |
-| referred_email | string | |
-| referred_user_id | bigint | nullable, FK → users |
-| status | enum | `pending`, `registered`, `hired`, `rewarded` |
-| created_at | timestamp | |
-| updated_at | timestamp | |
+- **Server-rendered Blade views** — no SPA, no AJAX by default. Forms POST with CSRF and redirect back with flash messages. Simpler than porting the Pinia + $fetch dance.
+- **Session auth via `web` guard** — ditch Sanctum bearer tokens. Use `Auth::login()` + session cookies. Fortify features are disabled (`'features' => []`) to avoid route collisions; auth controllers are rewritten as simple web controllers.
+- **Route stack moves from `api.php` → `web.php`** — `bootstrap/app.php` is updated to register web routes. All controllers now return Views (for GET) or `redirect()->back()` (for mutations) instead of JSON.
+- **Keep existing controller namespaces / FormRequests / Resources models** — FormRequests still validate; Resources aren't used for Blade (views read models directly). Existing middleware `role:candidate` / `role:jae_staff` still works.
+- **Toasts = session flashes** — `session()->flash('success' | 'error' | 'info', '...')` rendered by a single partial in every layout.
+- **Blade components** under `resources/views/components/ui/*` for the UI kit (button, input, card, badge, alert, modal, pagination, empty-state). Layout partials under `resources/views/partials/*`.
+- **CVs stay on private disk with signed URLs**; profile/position/company images stay on public disk (needs `php artisan storage:link`).
+- **Fixes applied in passing**:
+  - Password reset URL now points to `/reset-password?token=...&email=...` (Nuxt URL was `/password-reset/{token}` which 404'd anyway)
+  - Dashboard "rejected" typo becomes `discarded`
+  - Empty policy stubs removed (not registered anywhere)
+  - Unused dead files removed: top-level `ProfileController`, `AdminMiddleware` alias
+  - CV upload limit unified at 5 MB (was advertised as 10 MB in Nuxt, server was 5 MB)
 
 ---
 
-## API Endpoints
+## Build plan
 
-### Auth
-```
-POST   /api/auth/register
-POST   /api/auth/login
-POST   /api/auth/logout
-GET    /api/auth/me
-POST   /api/auth/forgot-password
-POST   /api/auth/reset-password
-```
+### Phase 1 — Foundation ✅
+- [x] Inventory Laravel frontend setup (Vite + Tailwind 4 already there)
+- [x] Extend `resources/css/app.css` with the Nuxt theme (primary, dark, accent, etc.)
+- [x] Update `bootstrap/app.php` to register web routes
+- [x] Clear out `routes/web.php` and `routes/api.php` for new route set
+- [x] Disable Fortify features (`config/fortify.php` features = [])
+- [x] Strip Sanctum from `User` model (no more bearer tokens)
+- [x] Add `auth.web` + custom `role` web middleware aliases
 
-### Candidate Profile
-```
-GET    /api/candidate/profile
-POST   /api/candidate/profile
-PUT    /api/candidate/profile
-POST   /api/candidate/profile/cv          (file upload)
-DELETE /api/candidate/profile/cv
-GET    /api/candidate/profile/cv          (download CV via signed URL)
-```
+### Phase 2 — Layouts & UI components ✅
+- [x] Base `app.blade.php` layout (loads Vite, head, toast partial, slot)
+- [x] Public layout partial: navbar + footer
+- [x] Candidate layout partial: navbar (no footer)
+- [x] Admin layout partial: sidebar + top bar
+- [x] Mobile menu partial
+- [x] Toast partial (reads session flashes)
+- [x] `<x-ui.button>` — variant/size/loading/type
+- [x] `<x-ui.input>` — label/error/required/type
+- [x] `<x-ui.textarea>`
+- [x] `<x-ui.select>` — options slot via attribute
+- [x] `<x-ui.card>` — header/footer/default slots
+- [x] `<x-ui.badge>` — variant/size
+- [x] `<x-ui.alert>` — type
+- [x] `<x-ui.empty-state>` — title/description/action slot
+- [x] `<x-ui.pagination>` — paginator from Eloquent
+- [x] `<x-ui.status-badge>` — application/referral status mapping
+- [x] `<x-ui.spinner>`
 
-### Positions (public + candidate)
-```
-GET    /api/positions                     (list active positions)
-GET    /api/positions/{id}                (position detail)
-```
+### Phase 3 — Auth ✅
+- [x] Rewrite `LoginController` — session auth via `Auth::attempt`, returns views
+- [x] Rewrite `RegisterController` — creates user + candidate profile, logs in
+- [x] Rewrite `LogoutController` — session invalidate + redirect
+- [x] Rewrite `PasswordResetController` — uses `Password` broker + views
+- [x] `MeController` removed (no longer needed — Auth::user() in blade)
+- [x] Login page view
+- [x] Register page view
+- [x] Forgot password page view
+- [x] Reset password page view
 
-### Applications (candidate)
-```
-GET    /api/candidate/applications        (my applications)
-POST   /api/candidate/applications        (apply to position)
-GET    /api/candidate/applications/{id}   (application detail + interviews)
-```
+### Phase 4 — Public pages ✅
+- [x] Landing page (`/`) — hero, stats, CTA sections (port of pages/index.vue)
+- [x] Positions list (`/positions`)
+- [x] Position detail (`/positions/{position}`)
+- [x] Public `PositionController` returns views
 
-### Referrals (candidate)
-```
-GET    /api/candidate/referrals           (my referrals)
-POST   /api/candidate/referrals           (send referral invite)
-```
+### Phase 5 — Candidate area ✅
+- [x] Candidate dashboard (`/candidate`)
+- [x] Profile page (`/candidate/profile`) with update form
+- [x] Profile image upload + delete
+- [x] CV upload + delete + download
+- [x] Applications list (`/candidate/applications`)
+- [x] Application detail (`/candidate/applications/{application}`)
+- [x] Referrals page (`/candidate/referrals`)
 
-### JAE Staff — Candidates Management
-```
-GET    /api/admin/candidates              (list all with filters)
-GET    /api/admin/candidates/{id}         (full profile + applications)
-GET    /api/admin/candidates/{id}/cv      (download candidate CV)
-```
+### Phase 6 — Admin area ✅
+- [x] Admin dashboard (`/admin`) — stats grid, pipeline, recent applications
+- [x] Candidates list (`/admin/candidates`) with pagination
+- [x] Candidate detail (`/admin/candidates/{candidate}`) with CV download
+- [x] Applications list (`/admin/applications`)
+- [x] Application detail (`/admin/applications/{application}`) with status update, notes, interview scheduling
+- [x] Interviews list (`/admin/interviews`) with create/edit/delete
+- [x] Positions list (`/admin/positions`)
+- [x] Create position page (`/admin/positions/create`)
+- [x] Edit position page (`/admin/positions/{position}/edit`) with image/logo uploads
 
-### JAE Staff — Applications Management
-```
-GET    /api/admin/applications            (all applications, filterable)
-GET    /api/admin/applications/{id}       (detail)
-PUT    /api/admin/applications/{id}/status (change status)
-POST   /api/admin/applications/{id}/notes (add internal note)
-GET    /api/admin/applications/{id}/notes (list notes)
-```
-
-### JAE Staff — Interviews
-```
-GET    /api/admin/interviews              (list all, filterable by date)
-POST   /api/admin/interviews              (schedule new)
-PUT    /api/admin/interviews/{id}         (update)
-DELETE /api/admin/interviews/{id}         (cancel)
-```
-
-### JAE Staff — Positions Management
-```
-GET    /api/admin/positions
-POST   /api/admin/positions
-PUT    /api/admin/positions/{id}
-DELETE /api/admin/positions/{id}
-```
-
-### JAE Staff — Dashboard Stats
-```
-GET    /api/admin/stats                   (counts, pipeline metrics)
-```
-
----
-
-## File Structure
-```
-app/
-├── Http/
-│   ├── Controllers/
-│   │   ├── Auth/
-│   │   │   ├── RegisterController.php
-│   │   │   ├── LoginController.php
-│   │   │   └── PasswordResetController.php
-│   │   ├── Candidate/
-│   │   │   ├── ProfileController.php
-│   │   │   ├── ApplicationController.php
-│   │   │   └── ReferralController.php
-│   │   ├── Admin/
-│   │   │   ├── CandidateController.php
-│   │   │   ├── ApplicationController.php
-│   │   │   ├── InterviewController.php
-│   │   │   ├── PositionController.php
-│   │   │   └── StatsController.php
-│   │   └── PositionController.php (public)
-│   ├── Middleware/
-│   │   └── EnsureUserHasRole.php
-│   ├── Requests/
-│   │   ├── Auth/
-│   │   │   ├── RegisterRequest.php
-│   │   │   └── LoginRequest.php
-│   │   ├── Candidate/
-│   │   │   ├── UpdateProfileRequest.php
-│   │   │   ├── UploadCvRequest.php
-│   │   │   └── CreateApplicationRequest.php
-│   │   └── Admin/
-│   │       ├── UpdateApplicationStatusRequest.php
-│   │       ├── CreateNoteRequest.php
-│   │       ├── CreateInterviewRequest.php
-│   │       ├── UpdateInterviewRequest.php
-│   │       └── PositionRequest.php
-│   └── Resources/
-│       ├── UserResource.php
-│       ├── CandidateProfileResource.php
-│       ├── PositionResource.php
-│       ├── ApplicationResource.php
-│       ├── InterviewResource.php
-│       └── NoteResource.php
-├── Models/
-│   ├── User.php
-│   ├── CandidateProfile.php
-│   ├── Position.php
-│   ├── Application.php
-│   ├── Interview.php
-│   ├── ApplicationNote.php
-│   └── Referral.php
-├── Notifications/
-│   ├── ApplicationReceived.php
-│   ├── ApplicationStatusChanged.php
-│   ├── InterviewScheduled.php
-│   └── ReferralInvite.php
-├── Services/
-│   ├── StatsService.php
-│   └── CvStorageService.php
-├── Enums/
-│   ├── UserRole.php
-│   ├── ApplicationStatus.php
-│   ├── InterviewType.php
-│   ├── Gender.php
-│   └── ReferralStatus.php
-└── Policies/
-    ├── ApplicationPolicy.php
-    ├── CandidateProfilePolicy.php
-    └── InterviewPolicy.php
-
-database/
-├── migrations/
-│   ├── create_users_table.php
-│   ├── create_candidate_profiles_table.php
-│   ├── create_positions_table.php
-│   ├── create_applications_table.php
-│   ├── create_interviews_table.php
-│   ├── create_application_notes_table.php
-│   └── create_referrals_table.php
-├── seeders/
-│   ├── DatabaseSeeder.php
-│   ├── UserSeeder.php
-│   └── PositionSeeder.php
-└── factories/
-    ├── UserFactory.php
-    ├── CandidateProfileFactory.php
-    ├── PositionFactory.php
-    └── ApplicationFactory.php
-
-routes/
-└── api.php
-```
+### Phase 7 — Cleanup ✅
+- [x] Delete unused API Resource classes (`app/Http/Resources/*`)
+- [x] Delete empty Policy stubs (`app/Policies/*`)
+- [x] Delete top-level `ProfileController` dead code
+- [x] Delete `AdminMiddleware` + `JsonResponse` middleware (unused aliases)
+- [x] Delete `MeController` (replaced by Blade `auth()->user()`)
+- [x] Remove `HasApiTokens` + `MustVerifyEmail` from User model
+- [x] Uninstall Fortify: remove from composer, delete `FortifyServiceProvider`, `app/Actions/Fortify/`, `config/fortify.php`
+- [x] Uninstall Sanctum: remove from composer, delete `config/sanctum.php`
+- [x] Delete `2025_12_20_*` migrations (two-factor columns, personal_access_tokens)
+- [x] Update `.env.example` — drop `SANCTUM_STATEFUL_DOMAINS`, `SPA_URL`, `APP_FRONTEND_URL`, flip `SESSION_DRIVER` to `database`, `SESSION_DOMAIN` to `null`
+- [x] Update `AppServiceProvider::ResetPassword::createUrlUsing` to point at the new in-app `password.reset` route
+- [x] Static grep: no lingering references to `HasApiTokens`, `FortifyServiceProvider`, `Sanctum`, `api.php`, `AdminMiddleware`, `Http\Resources\`, `Policies\`
 
 ---
 
-## Authentication Setup
+## Notes
 
-1. Install and configure Sanctum for SPA authentication
-2. Candidates register via `/api/auth/register` → creates user with role `candidate` + empty profile record
-3. JAE staff accounts are created manually via seeder or future admin endpoint
-4. All protected routes use `auth:sanctum` middleware
-5. Admin routes additionally use custom `role:jae_staff` middleware
-
-**Middleware registration in bootstrap/app.php:**
-```php
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->alias([
-        'role' => \App\Http\Middleware\EnsureUserHasRole::class,
-    ]);
-})
-```
-
----
-
-## Enums
-
-### UserRole.php
-```php
-enum UserRole: string
-{
-    case CANDIDATE = 'candidate';
-    case JAE_STAFF = 'jae_staff';
-}
-```
-
-### ApplicationStatus.php
-```php
-enum ApplicationStatus: string
-{
-    case REGISTERED = 'registered';
-    case PRESELECTED = 'preselected';
-    case INTERVIEW = 'interview';
-    case EVALUATION = 'evaluation';
-    case FINALIST = 'finalist';
-    case HIRED = 'hired';
-    case DISCARDED = 'discarded';
-}
-```
-
-### InterviewType.php
-```php
-enum InterviewType: string
-{
-    case TECHNICAL = 'technical';
-    case HR = 'hr';
-    case FINAL = 'final';
-}
-```
-
-### Gender.php
-```php
-enum Gender: string
-{
-    case MALE = 'male';
-    case FEMALE = 'female';
-    case OTHER = 'other';
-    case PREFER_NOT_TO_SAY = 'prefer_not_to_say';
-}
-```
-
-### ReferralStatus.php
-```php
-enum ReferralStatus: string
-{
-    case PENDING = 'pending';
-    case REGISTERED = 'registered';
-    case HIRED = 'hired';
-    case REWARDED = 'rewarded';
-}
-```
-
----
-
-## Key Model Relationships
-
-### User.php
-```php
-public function candidateProfile(): HasOne
-public function authoredNotes(): HasMany  // for JAE staff
-public function referralsSent(): HasMany
-```
-
-### CandidateProfile.php
-```php
-public function user(): BelongsTo
-public function applications(): HasMany
-```
-
-### Position.php
-```php
-public function applications(): HasMany
-```
-
-### Application.php
-```php
-public function candidate(): BelongsTo  // CandidateProfile
-public function position(): BelongsTo
-public function interviews(): HasMany
-public function notes(): HasMany
-```
-
-### Interview.php
-```php
-public function application(): BelongsTo
-```
-
-### ApplicationNote.php
-```php
-public function application(): BelongsTo
-public function author(): BelongsTo  // User
-```
-
----
-
-## Filtering Logic for Admin Candidates Endpoint
-
-`GET /api/admin/candidates` should support these query parameters:
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| search | string | Search in name, email, skills |
-| university | string | Filter by university |
-| degree | string | Filter by degree |
-| status | string | Filter by application status |
-| from_date | date | Registered after this date |
-| to_date | date | Registered before this date |
-| per_page | int | Pagination (default 15) |
-| sort_by | string | Column to sort by |
-| sort_dir | string | asc or desc |
-
----
-
-## CV Storage
-
-- Store CVs privately using Laravel's Storage facade
-- Accept only PDF files, max 5MB
-- Generate signed temporary URLs for secure access
-- Use a dedicated `CvStorageService` for upload/delete/URL generation
-```php
-class CvStorageService
-{
-    public function upload(UploadedFile $file, int $userId): string
-    public function delete(string $path): bool
-    public function getSignedUrl(string $path, int $minutes = 30): string
-}
-```
-
----
-
-## Stats Service
-
-`GET /api/admin/stats` returns:
-```json
-{
-    "total_candidates": 150,
-    "total_applications": 200,
-    "applications_by_status": {
-        "registered": 50,
-        "preselected": 40,
-        "interview": 30,
-        "evaluation": 25,
-        "finalist": 20,
-        "hired": 15,
-        "discarded": 20
-    },
-    "interviews_this_week": 8,
-    "recent_applications": [],
-    "top_universities": [
-        {"name": "UABC", "count": 45},
-        {"name": "CETYS", "count": 30}
-    ]
-}
-```
-
----
-
-## Development Phases
-
-### Phase 1 — Foundation
-
-- Project setup with Sanctum configured for SPA auth
-- All database migrations
-- All Eloquent models with relationships
-- Enums
-- User authentication endpoints (register, login, logout, me)
-- Role middleware
-- Basic seeders (JAE staff user, sample positions)
-- API Resource classes
-
-### Phase 2 — Candidate Features
-
-- Profile CRUD endpoints
-- CV upload with validation and storage
-- Public positions list and detail
-- Application creation and listing
-- Referral system endpoints
-
-### Phase 3 — JAE Staff Features
-
-- Candidates list with filtering and pagination
-- Candidate detail endpoint
-- Application status management
-- Notes system
-- Interview CRUD
-- Positions management
-- Stats endpoint
-
-### Phase 4 — Polish
-
-- Email notifications (ApplicationReceived, StatusChanged, InterviewScheduled)
-- Policies for authorization
-- Comprehensive FormRequest validation
-- API rate limiting
-- Feature tests for critical flows
-- API documentation (or OpenAPI spec)
-
----
-
-## Environment Variables
-```env
-APP_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:3000
-
-SANCTUM_STATEFUL_DOMAINS=localhost:3000
-
-FILESYSTEM_DISK=local
-# For production:
-# FILESYSTEM_DISK=s3
-# AWS_ACCESS_KEY_ID=
-# AWS_SECRET_ACCESS_KEY=
-# AWS_DEFAULT_REGION=
-# AWS_BUCKET=
-
-MAIL_MAILER=smtp
-MAIL_HOST=
-MAIL_PORT=
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_FROM_ADDRESS=
-MAIL_FROM_NAME="${APP_NAME}"
-```
-
----
-
-## Implementation Notes
-
-1. Use `FormRequest` classes for all validation — never validate in controllers
-2. Use `API Resources` for all JSON responses to maintain consistent structure
-3. CVs must be stored privately and never publicly accessible — always use signed URLs
-4. Status changes on applications should trigger the `ApplicationStatusChanged` notification
-5. When scheduling interviews, trigger the `InterviewScheduled` notification to the candidate
-6. Consider adding an `application_status_logs` table later for audit trail
-7. Use database transactions when creating applications (to handle any related records)
-8. Implement soft deletes on positions (so existing applications don't break)
-9. Add indexes on frequently filtered columns: `applications.status`, `candidate_profiles.university`, `candidate_profiles.degree`
-
----
-
-This document provides everything needed to build the Laravel API. Start with Phase 1 and proceed sequentially.
+- Pinned stack: Laravel 12, PHP 8.2+, Tailwind 4 (CSS-based config), Blade components, Vite 7.
+- **The user still needs to run** after pulling:
+  - `composer install`
+  - `npm install`
+  - `php artisan migrate`
+  - `php artisan storage:link`
+  - `npm run build` (prod) or `npm run dev` (local)
+  - `php artisan db:seed` (optional, test accounts)
+- Test accounts (unchanged):
+  - Admin: `admin@seekrecruit.com` / `password`
+  - Candidate: `juan@example.com` / `password`

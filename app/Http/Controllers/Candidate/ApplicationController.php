@@ -5,68 +5,59 @@ namespace App\Http\Controllers\Candidate;
 use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Candidate\CreateApplicationRequest;
-use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ApplicationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): View
     {
         $profile = $request->user()->candidateProfile;
 
-        $applications = Application::where('candidate_id', $profile->id)
-            ->with(['position', 'interviews'])
-            ->latest()
-            ->get();
+        $applications = $profile
+            ? Application::where('candidate_id', $profile->id)
+                ->with(['position', 'interviews'])
+                ->latest()
+                ->get()
+            : collect();
 
-        return response()->json([
-            'applications' => ApplicationResource::collection($applications),
-        ]);
+        return view('candidate.applications.index', compact('applications'));
     }
 
-    public function store(CreateApplicationRequest $request): JsonResponse
+    public function store(CreateApplicationRequest $request): RedirectResponse
     {
         $profile = $request->user()->candidateProfile;
 
-        $existingApplication = Application::where('candidate_id', $profile->id)
-            ->where('position_id', $request->position_id)
+        $existing = Application::where('candidate_id', $profile->id)
+            ->where('position_id', $request->integer('position_id'))
             ->first();
 
-        if ($existingApplication) {
-            return response()->json([
-                'message' => 'You have already applied to this position',
-            ], 422);
+        if ($existing) {
+            return back()->with('error', 'You have already applied to this position.');
         }
 
-        $application = DB::transaction(function () use ($request, $profile) {
-            return Application::create([
-                'candidate_id' => $profile->id,
-                'position_id' => $request->position_id,
-                'status' => ApplicationStatus::REGISTERED,
-            ]);
-        });
+        $application = DB::transaction(fn () => Application::create([
+            'candidate_id' => $profile->id,
+            'position_id' => $request->integer('position_id'),
+            'status' => ApplicationStatus::REGISTERED,
+        ]));
 
-        return response()->json([
-            'application' => new ApplicationResource($application->load('position')),
-            'message' => 'Application submitted successfully',
-        ], 201);
+        return redirect()
+            ->route('candidate.applications.show', $application)
+            ->with('success', 'Application submitted successfully!');
     }
 
-    public function show(Request $request, Application $application): JsonResponse
+    public function show(Request $request, Application $application): View
     {
         $profile = $request->user()->candidateProfile;
 
-        if ($application->candidate_id !== $profile->id) {
-            abort(403, 'Unauthorized');
-        }
+        abort_unless($application->candidate_id === $profile?->id, 403);
 
         $application->load(['position', 'interviews']);
 
-        return response()->json([
-            'application' => new ApplicationResource($application),
-        ]);
+        return view('candidate.applications.show', compact('application'));
     }
 }

@@ -5,48 +5,41 @@ namespace App\Http\Controllers\Candidate;
 use App\Enums\ReferralStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Referral;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ReferralController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): View
     {
         $referrals = Referral::where('referrer_id', $request->user()->id)
-            ->with('referredUser')
             ->latest()
             ->get();
 
-        return response()->json([
-            'referrals' => $referrals,
-        ]);
+        return view('candidate.referrals', compact('referrals'));
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $data = $request->validate([
             'referred_email' => ['required', 'email'],
         ]);
 
-        $existingReferral = Referral::where('referrer_id', $request->user()->id)
-            ->where('referred_email', $request->referred_email)
+        $existing = Referral::where('referrer_id', $request->user()->id)
+            ->where('referred_email', $data['referred_email'])
             ->first();
 
-        if ($existingReferral) {
-            return response()->json([
-                'message' => 'You have already referred this email address',
-            ], 422);
+        if ($existing) {
+            return back()->with('error', 'You have already referred this email address.');
         }
 
-        $referral = Referral::create([
+        Referral::create([
             'referrer_id' => $request->user()->id,
-            'referred_email' => $request->referred_email,
+            'referred_email' => $data['referred_email'],
             'status' => ReferralStatus::PENDING,
         ]);
 
-        return response()->json([
-            'referral' => $referral,
-            'message' => 'Referral invitation sent successfully',
-        ], 201);
+        return back()->with('success', 'Referral invitation sent successfully.');
     }
 }

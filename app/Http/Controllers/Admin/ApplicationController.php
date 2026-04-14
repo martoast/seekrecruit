@@ -5,91 +5,72 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateNoteRequest;
 use App\Http\Requests\Admin\UpdateApplicationStatusRequest;
-use App\Http\Resources\ApplicationResource;
-use App\Http\Resources\NoteResource;
 use App\Models\Application;
 use App\Models\ApplicationNote;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ApplicationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): View
     {
         $query = Application::with(['candidate.user', 'position']);
 
+        if ($request->filled('search')) {
+            $search = $request->string('search');
+            $query->whereHas('candidate.user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })->orWhereHas('position', function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%");
+            });
+        }
+
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', $request->string('status'));
         }
 
         if ($request->filled('position_id')) {
-            $query->where('position_id', $request->position_id);
+            $query->where('position_id', $request->integer('position_id'));
         }
 
         if ($request->filled('from_date')) {
-            $query->where('created_at', '>=', $request->from_date);
+            $query->where('created_at', '>=', $request->date('from_date'));
         }
 
         if ($request->filled('to_date')) {
-            $query->where('created_at', '<=', $request->to_date);
+            $query->where('created_at', '<=', $request->date('to_date'));
         }
 
-        $perPage = $request->get('per_page', 15);
-        $applications = $query->latest()->paginate($perPage);
+        $applications = $query->latest()->paginate(15)->withQueryString();
 
-        return response()->json([
-            'applications' => ApplicationResource::collection($applications),
-            'meta' => [
-                'current_page' => $applications->currentPage(),
-                'last_page' => $applications->lastPage(),
-                'per_page' => $applications->perPage(),
-                'total' => $applications->total(),
-            ],
-        ]);
+        return view('admin.applications.index', compact('applications'));
     }
 
-    public function show(Application $application): JsonResponse
+    public function show(Application $application): View
     {
         $application->load(['candidate.user', 'position', 'interviews', 'notes.author']);
 
-        return response()->json([
-            'application' => new ApplicationResource($application),
-        ]);
+        return view('admin.applications.show', compact('application'));
     }
 
-    public function updateStatus(UpdateApplicationStatusRequest $request, Application $application): JsonResponse
+    public function updateStatus(UpdateApplicationStatusRequest $request, Application $application): RedirectResponse
     {
-        $application->update([
-            'status' => $request->status,
-        ]);
+        $application->update(['status' => $request->string('status')]);
 
-        return response()->json([
-            'application' => new ApplicationResource($application->load(['candidate.user', 'position'])),
-            'message' => 'Application status updated successfully',
-        ]);
+        return back()->with('success', 'Application status updated successfully.');
     }
 
-    public function addNote(CreateNoteRequest $request, Application $application): JsonResponse
+    public function addNote(CreateNoteRequest $request, Application $application): RedirectResponse
     {
-        $note = ApplicationNote::create([
+        ApplicationNote::create([
             'application_id' => $application->id,
             'author_id' => $request->user()->id,
-            'content' => $request->content,
+            'content' => $request->string('content'),
             'created_at' => now(),
         ]);
 
-        return response()->json([
-            'note' => new NoteResource($note->load('author')),
-            'message' => 'Note added successfully',
-        ], 201);
-    }
-
-    public function getNotes(Application $application): JsonResponse
-    {
-        $notes = $application->notes()->with('author')->latest('created_at')->get();
-
-        return response()->json([
-            'notes' => NoteResource::collection($notes),
-        ]);
+        return back()->with('success', 'Note added successfully.');
     }
 }

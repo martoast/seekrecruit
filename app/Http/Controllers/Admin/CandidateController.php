@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CandidateProfileResource;
 use App\Models\CandidateProfile;
 use App\Services\CvStorageService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CandidateController extends Controller
@@ -15,82 +15,62 @@ class CandidateController extends Controller
         private CvStorageService $cvStorageService
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): View
     {
         $query = CandidateProfile::with('user');
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = $request->string('search');
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($userQuery) use ($search) {
                     $userQuery->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 })
-                ->orWhereRaw('JSON_CONTAINS(skills, ?)', [json_encode($search)]);
+                ->orWhere('university', 'like', "%{$search}%")
+                ->orWhere('degree', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('university')) {
-            $query->where('university', $request->university);
+            $query->where('university', $request->string('university'));
         }
 
         if ($request->filled('degree')) {
-            $query->where('degree', $request->degree);
-        }
-
-        if ($request->filled('status')) {
-            $query->whereHas('applications', function ($q) use ($request) {
-                $q->where('status', $request->status);
-            });
+            $query->where('degree', $request->string('degree'));
         }
 
         if ($request->filled('from_date')) {
-            $query->where('created_at', '>=', $request->from_date);
+            $query->where('created_at', '>=', $request->date('from_date'));
         }
 
         if ($request->filled('to_date')) {
-            $query->where('created_at', '<=', $request->to_date);
+            $query->where('created_at', '<=', $request->date('to_date'));
         }
 
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
+        $sortBy = $request->string('sort_by', 'created_at')->toString();
+        $sortDir = $request->string('sort_dir', 'desc')->toString();
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = $request->get('per_page', 15);
-        $candidates = $query->paginate($perPage);
+        $candidates = $query->paginate(15)->withQueryString();
 
-        return response()->json([
-            'candidates' => CandidateProfileResource::collection($candidates),
-            'meta' => [
-                'current_page' => $candidates->currentPage(),
-                'last_page' => $candidates->lastPage(),
-                'per_page' => $candidates->perPage(),
-                'total' => $candidates->total(),
-            ],
-        ]);
+        return view('admin.candidates.index', compact('candidates'));
     }
 
-    public function show(CandidateProfile $candidate): JsonResponse
+    public function show(CandidateProfile $candidate): View
     {
         $candidate->load(['user', 'applications.position', 'applications.interviews']);
 
-        return response()->json([
-            'candidate' => new CandidateProfileResource($candidate),
-        ]);
+        return view('admin.candidates.show', compact('candidate'));
     }
 
-    public function downloadCv(CandidateProfile $candidate): JsonResponse
+    public function downloadCv(CandidateProfile $candidate): RedirectResponse
     {
         if (! $candidate->cv_path) {
-            return response()->json([
-                'message' => 'No CV available for this candidate',
-            ], 404);
+            return back()->with('error', 'No CV available for this candidate.');
         }
 
         $url = $this->cvStorageService->getSignedUrl($candidate->cv_path);
 
-        return response()->json([
-            'url' => $url,
-        ]);
+        return redirect()->away($url);
     }
 }

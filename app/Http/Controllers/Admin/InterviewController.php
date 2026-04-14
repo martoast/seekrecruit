@@ -5,62 +5,60 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateInterviewRequest;
 use App\Http\Requests\Admin\UpdateInterviewRequest;
-use App\Http\Resources\InterviewResource;
+use App\Models\Application;
 use App\Models\Interview;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class InterviewController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): View
     {
-        $query = Interview::with('application.candidate.user', 'application.position');
+        $query = Interview::with(['application.candidate.user', 'application.position']);
 
         if ($request->filled('from_date')) {
-            $query->where('scheduled_at', '>=', $request->from_date);
+            $query->where('scheduled_at', '>=', $request->date('from_date'));
         }
 
         if ($request->filled('to_date')) {
-            $query->where('scheduled_at', '<=', $request->to_date);
+            $query->where('scheduled_at', '<=', $request->date('to_date'));
         }
 
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
+            $query->where('type', $request->string('type'));
         }
 
-        $interviews = $query->orderBy('scheduled_at', 'asc')->get();
+        $interviews = $query->orderBy('scheduled_at')->get();
 
-        return response()->json([
-            'interviews' => InterviewResource::collection($interviews),
-        ]);
+        $applications = Application::with(['candidate.user', 'position'])
+            ->latest()
+            ->take(100)
+            ->get();
+
+        return view('admin.interviews.index', compact('interviews', 'applications'));
     }
 
-    public function store(CreateInterviewRequest $request): JsonResponse
+    public function store(CreateInterviewRequest $request): RedirectResponse
     {
-        $interview = Interview::create($request->validated());
+        Interview::create($request->validated());
 
-        return response()->json([
-            'interview' => new InterviewResource($interview),
-            'message' => 'Interview scheduled successfully',
-        ], 201);
+        return redirect()->route('admin.interviews.index')
+            ->with('success', 'Interview scheduled successfully.');
     }
 
-    public function update(UpdateInterviewRequest $request, Interview $interview): JsonResponse
+    public function update(UpdateInterviewRequest $request, Interview $interview): RedirectResponse
     {
         $interview->update($request->validated());
 
-        return response()->json([
-            'interview' => new InterviewResource($interview->fresh()),
-            'message' => 'Interview updated successfully',
-        ]);
+        return redirect()->route('admin.interviews.index')
+            ->with('success', 'Interview updated successfully.');
     }
 
-    public function destroy(Interview $interview): JsonResponse
+    public function destroy(Interview $interview): RedirectResponse
     {
         $interview->delete();
 
-        return response()->json([
-            'message' => 'Interview cancelled successfully',
-        ]);
+        return back()->with('success', 'Interview cancelled successfully.');
     }
 }

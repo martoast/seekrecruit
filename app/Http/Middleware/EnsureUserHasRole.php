@@ -8,15 +8,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserHasRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (! $request->user() || $request->user()->role->value !== $role) {
-            abort(403, 'Unauthorized');
+        $user = $request->user();
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        if ($user->role->value !== $role) {
+            return redirect($user->isAdmin() ? route('admin.dashboard') : route('candidate.dashboard'));
         }
 
         return $next($request);

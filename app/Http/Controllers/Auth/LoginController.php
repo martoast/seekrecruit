@@ -4,29 +4,34 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Resources\UserResource;
-use App\Models\User;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
-    public function __invoke(LoginRequest $request): JsonResponse
+    public function create(): View
     {
-        $user = User::where('email', $request->email)->first();
+        return view('auth.login');
+    }
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $credentials = $request->only('email', 'password');
+        $remember = $request->boolean('remember');
+
+        if (! Auth::attempt($credentials, $remember)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => __('auth.failed'),
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $request->session()->regenerate();
 
-        return response()->json([
-            'user' => new UserResource($user),
-            'token' => $token,
-        ]);
+        $user = Auth::user();
+        $target = $user->isAdmin() ? route('admin.dashboard') : route('candidate.dashboard');
+
+        return redirect()->intended($target);
     }
 }

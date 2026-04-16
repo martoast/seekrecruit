@@ -8,7 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserHasRole
 {
-    public function handle(Request $request, Closure $next, string $role): Response
+    /**
+     * Accepts one or more roles (comma-separated in the route string):
+     *   Route::middleware('role:hr_admin,super_admin')
+     * Passes if the authenticated user's role matches ANY of them.
+     */
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = $request->user();
 
@@ -16,7 +21,7 @@ class EnsureUserHasRole
             return redirect()->route('login');
         }
 
-        if ($user->role->value !== $role) {
+        if (! in_array($user->role->value, $roles, true)) {
             return redirect($user->isAdmin() ? route('admin.dashboard') : route('candidate.dashboard'));
         }
 

@@ -123,6 +123,7 @@
                                             <form method="POST" action="{{ route('admin.positions.update', $position) }}" class="inline">
                                                 @csrf
                                                 @method('PUT')
+                                                <input type="hidden" name="client_id" value="{{ $position->client_id }}" />
                                                 <input type="hidden" name="title" value="{{ $position->title }}" />
                                                 <input type="hidden" name="description" value="{{ $position->description }}" />
                                                 <input type="hidden" name="requirements" value="{{ $position->requirements }}" />

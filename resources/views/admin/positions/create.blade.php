@@ -20,6 +20,22 @@
             <form method="POST" action="{{ route('admin.positions.store') }}" class="divide-y divide-gray-100">
                 @csrf
                 <div class="p-6 space-y-6">
+                    @if (auth()->user()->isSuperAdmin())
+                        <x-ui.select
+                            label="Client"
+                            name="client_id"
+                            required
+                            placeholder="Choose a client..."
+                            :value="old('client_id')"
+                            :options="$clients->pluck('name', 'id')->all()"
+                        />
+                    @else
+                        {{-- HR admin: client_id is auto-filled in PositionRequest::prepareForValidation --}}
+                        <div class="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                            Creating for <span class="font-semibold">{{ auth()->user()->client?->name }}</span>
+                        </div>
+                    @endif
+
                     <x-ui.input label="Position Title" name="title" placeholder="e.g., Junior Software Developer" required />
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

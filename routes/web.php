@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Admin\ApplicationController as AdminApplicationController;
 use App\Http\Controllers\Admin\CandidateController as AdminCandidateController;
+use App\Http\Controllers\Admin\ClientController as AdminClientController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\InterviewController as AdminInterviewController;
 use App\Http\Controllers\Admin\PositionController as AdminPositionController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -63,8 +65,8 @@ Route::middleware(['auth', 'role:candidate'])
         Route::post('/referrals', [CandidateReferralController::class, 'store'])->name('referrals.store');
     });
 
-// Admin area
-Route::middleware(['auth', 'role:jae_staff'])
+// Admin area — HR Admin + Super Admin
+Route::middleware(['auth', 'role:hr_admin,super_admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -94,4 +96,27 @@ Route::middleware(['auth', 'role:jae_staff'])
         Route::delete('/positions/{position}/image', [AdminPositionController::class, 'deleteImage'])->name('positions.image.destroy');
         Route::post('/positions/{position}/company-logo', [AdminPositionController::class, 'uploadCompanyLogo'])->name('positions.logo.store');
         Route::delete('/positions/{position}/company-logo', [AdminPositionController::class, 'deleteCompanyLogo'])->name('positions.logo.destroy');
+    });
+
+// Super Admin only — Clients + admin-user management
+Route::middleware(['auth', 'role:super_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/clients', [AdminClientController::class, 'index'])->name('clients.index');
+        Route::get('/clients/create', [AdminClientController::class, 'create'])->name('clients.create');
+        Route::post('/clients', [AdminClientController::class, 'store'])->name('clients.store');
+        Route::get('/clients/{client}', [AdminClientController::class, 'show'])->name('clients.show');
+        Route::get('/clients/{client}/edit', [AdminClientController::class, 'edit'])->name('clients.edit');
+        Route::put('/clients/{client}', [AdminClientController::class, 'update'])->name('clients.update');
+        Route::delete('/clients/{client}', [AdminClientController::class, 'destroy'])->name('clients.destroy');
+        Route::post('/clients/{client}/logo', [AdminClientController::class, 'uploadLogo'])->name('clients.logo.store');
+        Route::delete('/clients/{client}/logo', [AdminClientController::class, 'deleteLogo'])->name('clients.logo.destroy');
+
+        Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
+        Route::get('/admins/create', [AdminUserController::class, 'create'])->name('admins.create');
+        Route::post('/admins', [AdminUserController::class, 'store'])->name('admins.store');
+        Route::get('/admins/{user}/edit', [AdminUserController::class, 'edit'])->name('admins.edit');
+        Route::put('/admins/{user}', [AdminUserController::class, 'update'])->name('admins.update');
+        Route::delete('/admins/{user}', [AdminUserController::class, 'destroy'])->name('admins.destroy');
     });

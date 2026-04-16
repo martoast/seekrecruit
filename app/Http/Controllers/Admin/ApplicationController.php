@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToClient;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateNoteRequest;
 use App\Http\Requests\Admin\UpdateApplicationStatusRequest;
@@ -14,9 +15,18 @@ use Illuminate\Support\Facades\DB;
 
 class ApplicationController extends Controller
 {
+    use ScopesToClient;
+
     public function index(Request $request): View
     {
-        $query = Application::with(['candidate.user', 'position']);
+        $user = $request->user();
+        $clientId = $this->activeClientId($user, $request->integer('client_id') ?: null);
+
+        $query = Application::with(['candidate.user', 'position.client']);
+
+        if ($clientId) {
+            $query->whereHas('position', fn ($q) => $q->where('client_id', $clientId));
+        }
 
         if ($request->filled('search')) {
             $search = $request->string('search');
@@ -46,7 +56,13 @@ class ApplicationController extends Controller
 
         $applications = $query->latest()->paginate(15)->withQueryString();
 
-        $byStatus = Application::select('status', DB::raw('count(*) as count'))
+        // Stats are scoped the same way as the list
+        $statsQuery = Application::query();
+        if ($clientId) {
+            $statsQuery->whereHas('position', fn ($q) => $q->where('client_id', $clientId));
+        }
+
+        $byStatus = $statsQuery->select('status', DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -61,15 +77,20 @@ class ApplicationController extends Controller
         return view('admin.applications.index', compact('applications', 'stats'));
     }
 
-    public function show(Application $application): View
+    public function show(Request $request, Application $application): View
     {
-        $application->load(['candidate.user', 'position', 'interviews', 'notes.author']);
+        $application->load(['candidate.user', 'position.client', 'interviews', 'notes.author']);
+
+        abort_unless($this->userOwnsClient($request->user(), $application->position?->client_id), 403);
 
         return view('admin.applications.show', compact('application'));
     }
 
     public function updateStatus(UpdateApplicationStatusRequest $request, Application $application): RedirectResponse
     {
+        $application->load('position');
+        abort_unless($this->userOwnsClient($request->user(), $application->position?->client_id), 403);
+
         $application->update(['status' => $request->string('status')]);
 
         return back()->with('success', 'Application status updated successfully.');
@@ -77,6 +98,9 @@ class ApplicationController extends Controller
 
     public function addNote(CreateNoteRequest $request, Application $application): RedirectResponse
     {
+        $application->load('position');
+        abort_unless($this->userOwnsClient($request->user(), $application->position?->client_id), 403);
+
         ApplicationNote::create([
             'application_id' => $application->id,
             'author_id' => $request->user()->id,

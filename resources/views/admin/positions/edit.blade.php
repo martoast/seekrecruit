@@ -21,6 +21,20 @@
                 @csrf
                 @method('PUT')
                 <div class="p-6 space-y-6">
+                    @if (auth()->user()->isSuperAdmin())
+                        <x-ui.select
+                            label="Client"
+                            name="client_id"
+                            required
+                            :value="old('client_id', $position->client_id)"
+                            :options="$clients->pluck('name', 'id')->all()"
+                        />
+                    @else
+                        <div class="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                            Client: <span class="font-semibold">{{ $position->client?->name ?? '—' }}</span>
+                        </div>
+                    @endif
+
                     <x-ui.input label="Position Title" name="title" :value="$position->title" required />
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

@@ -12,9 +12,24 @@ class PositionRequest extends FormRequest
         return true;
     }
 
+    /**
+     * HR admins can only create positions for their own client. Rather than
+     * render a hidden client_id input in the form, fill it in here from the
+     * authenticated user so validation still sees the required field.
+     */
+    protected function prepareForValidation(): void
+    {
+        $user = $this->user();
+
+        if ($user && $user->isHrAdmin()) {
+            $this->merge(['client_id' => $user->client_id]);
+        }
+    }
+
     public function rules(): array
     {
         return [
+            'client_id' => ['required', 'integer', 'exists:clients,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'requirements' => ['required', 'string'],
@@ -34,6 +49,7 @@ class PositionRequest extends FormRequest
         return [
             'salary_max.gte' => 'The maximum salary must be greater than or equal to the minimum.',
             'salary_currency.size' => 'Currency must be a 3-letter code (e.g., USD, MXN).',
+            'client_id.required' => 'Please choose a client for this position.',
         ];
     }
 }

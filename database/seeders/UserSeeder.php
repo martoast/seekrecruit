@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\Gender;
 use App\Enums\UserRole;
 use App\Models\CandidateProfile;
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -12,26 +13,46 @@ use Illuminate\Support\Facades\Hash;
 class UserSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeds. Depends on ClientSeeder running first so the
+     * clients we reference by slug already exist.
      */
     public function run(): void
     {
-        // Create JAE Staff (Admin) users
-        User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@seekrecruit.com',
-            'password' => Hash::make('password'),
-            'role' => UserRole::JAE_STAFF,
-            'email_verified_at' => now(),
-        ]);
+        $jae = Client::where('slug', 'jae-tijuana')->firstOrFail();
+        $acme = Client::where('slug', 'acme-engineering')->firstOrFail();
+        $tje = Client::where('slug', 'tijuana-electronics')->firstOrFail();
 
-        User::create([
-            'name' => 'Maria Garcia',
-            'email' => 'maria@seekrecruit.com',
-            'password' => Hash::make('password'),
-            'role' => UserRole::JAE_STAFF,
-            'email_verified_at' => now(),
-        ]);
+        // Super Admin — S&R platform owner (no client affiliation)
+        User::updateOrCreate(
+            ['email' => 'admin@seekrecruit.com'],
+            [
+                'name' => 'Admin User',
+                'password' => Hash::make('password'),
+                'role' => UserRole::SUPER_ADMIN,
+                'client_id' => null,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // HR Admins — one per seed client
+        $hrAdmins = [
+            ['name' => 'Maria Garcia', 'email' => 'maria@seekrecruit.com', 'client_id' => $jae->id],
+            ['name' => 'Jorge Ramirez', 'email' => 'jorge@acme.com', 'client_id' => $acme->id],
+            ['name' => 'Elena Morales', 'email' => 'elena@tjelectronics.com', 'client_id' => $tje->id],
+        ];
+
+        foreach ($hrAdmins as $admin) {
+            User::updateOrCreate(
+                ['email' => $admin['email']],
+                [
+                    'name' => $admin['name'],
+                    'password' => Hash::make('password'),
+                    'role' => UserRole::HR_ADMIN,
+                    'client_id' => $admin['client_id'],
+                    'email_verified_at' => now(),
+                ]
+            );
+        }
 
         // Create Candidate users with profiles
         $candidates = [

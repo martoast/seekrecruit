@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            ClientSeeder::class,     // must run first — users + positions FK to clients
             UserSeeder::class,
             PositionSeeder::class,
             ApplicationSeeder::class,

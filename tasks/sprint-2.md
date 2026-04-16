@@ -317,16 +317,16 @@ Small commits, pushed as we go, so if we get compacted or interrupted, the work 
 
 ## Session notes (update as we go so context survives compaction)
 
-- [ ] ChClient model
-- [ ] Schema migration
-- [ ] Role refactor complete
-- [ ] Query scoping complete
-- [ ] Client CRUD live
-- [ ] Admin user CRUD live
-- [ ] Sidebar + switcher live
-- [ ] Seeders pass `migrate:fresh --seed`
-- [ ] CLAUDE.md updated
-- [ ] All commits pushed
+- [x] Client model
+- [x] Schema migrations (tenant FKs + role string conversion)
+- [x] Role refactor complete (UserRole enum + User helpers)
+- [x] Query scoping complete (ScopesToClient trait applied to all admin controllers + StatsService)
+- [x] Client CRUD live (index / create / edit / show / logo upload + delete)
+- [x] Admin user CRUD live (HR admin create/edit/delete; super admins read-only in UI)
+- [x] Sidebar role-gated nav (Clients + Admins only for super admins); HR client label in user chip; dashboard banner when client is active
+- [x] Seeders: ClientSeeder added, UserSeeder + PositionSeeder + DatabaseSeeder updated
+- [x] CLAUDE.md updated with new roles, Client model, scoping conventions
+- [x] All six Sprint 2 commits pushed to origin/main
 
 ---
 

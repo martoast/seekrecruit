@@ -1,6 +1,6 @@
 # Seek & Recruit — Laravel Monolith
 
-Private recruitment platform for JAE Tijuana. Candidates build profiles and apply to positions; JAE staff move them through a hiring pipeline.
+Private recruitment platform for JAE Tijuana and its client companies in Baja California. Candidates build profiles and apply to positions. Two admin tiers manage the pipeline: **HR Admins** are scoped to a single client company; **Super Admins** (S&R operators) see everything and manage the client roster itself.
 
 This used to be a Laravel API with a separate Nuxt 3 SPA. It is now a **single server-rendered Laravel + Blade app**. The Nuxt repo is archived — don't port patterns back from it without thinking.
 
@@ -15,17 +15,18 @@ This used to be a Laravel API with a separate Nuxt 3 SPA. It is now a **single s
 
 ## What makes this app tick
 
-**Routing.** Everything is in `routes/web.php` under named routes. `routes/api.php` does not exist. Three middleware-scoped groups:
+**Routing.** Everything is in `routes/web.php` under named routes. `routes/api.php` does not exist. Four middleware-scoped groups:
 
 - `guest` — login/register/forgot/reset
 - `auth` + `role:candidate` — `/candidate/*`, named `candidate.*`
-- `auth` + `role:jae_staff` — `/admin/*`, named `admin.*`
+- `auth` + `role:hr_admin,super_admin` — `/admin/*`, named `admin.*` (everything both admin tiers can touch)
+- `auth` + `role:super_admin` — `/admin/clients/*` + `/admin/admins/*` (Super Admin only: client management + HR admin CRUD)
 
-The `role` alias points at `App\Http\Middleware\EnsureUserHasRole`, which redirects (not aborts) if the wrong role is logged in — it sends candidates to `candidate.dashboard` and admins to `admin.dashboard`. Registered in `bootstrap/app.php`.
+The `role` alias points at `App\Http\Middleware\EnsureUserHasRole`, which takes a **comma-separated list of roles** (variadic under the hood) and redirects (not aborts) if the user's role doesn't match any. Mismatches go to `candidate.dashboard` or `admin.dashboard` depending on the user's current role. Registered in `bootstrap/app.php`.
 
 **Auth.** Session-based only. No Sanctum, no Fortify, no tokens. `LoginController` calls `Auth::attempt`; `RegisterController` creates a `User` + `CandidateProfile` in a transaction and `Auth::login`s them; `LogoutController` invalidates the session. `PasswordResetController` uses Laravel's built-in `Password` broker. The password reset URL is built in `AppServiceProvider` to point at the in-app `password.reset` route.
 
-After login, users are redirected based on role: `jae_staff` → `admin.dashboard`, anyone else → `candidate.dashboard`. `guest` middleware does the inverse — already-logged-in users never see the auth pages.
+After login, users are redirected based on role: any admin (`hr_admin` or `super_admin`) → `admin.dashboard`; candidates → `candidate.dashboard`. `guest` middleware does the inverse — already-logged-in users never see the auth pages.
 
 **Controllers.** One controller per feature, grouped by area:
 
@@ -44,11 +45,15 @@ app/Http/Controllers/
 │   ├── ApplicationController.php
 │   └── ReferralController.php
 └── Admin/
+    ├── Concerns/
+    │   └── ScopesToClient.php   # trait with activeClientId/userOwnsClient/activeClient helpers
     ├── DashboardController.php
     ├── CandidateController.php
     ├── ApplicationController.php
     ├── InterviewController.php
-    └── PositionController.php
+    ├── PositionController.php
+    ├── ClientController.php     # Super Admin only — Client CRUD
+    └── UserController.php       # Super Admin only — HR Admin CRUD
 ```
 
 Controllers return Views for GETs and `redirect()->back()->with('success', '...')` (or `redirect()->route(...)`) for mutations. **Never return JSON from a controller** — this app has no API surface. If you find yourself wanting to, you're probably trying to do AJAX; do a full form POST + redirect + flash instead.
@@ -113,13 +118,35 @@ For flash feedback, controllers return `back()->with('success', 'Message')` or `
 
 ## Data model
 
-- `User` (role enum: `candidate` | `jae_staff`) `hasOne` `CandidateProfile` `hasMany` `Application` `belongsTo` `Position`, `hasMany` `Interview` + `ApplicationNote`
-- `Position` is soft-deleted (so existing applications survive)
-- `Referral` is standalone; references `User` as referrer / referred
-- Enums in `app/Enums/`: `UserRole`, `ApplicationStatus`, `InterviewType`, `Gender`, `ReferralStatus`, `PositionStatus`, `EmploymentType`, `Modality`
-- `CandidateProfile->skills` is a JSON column cast to `array`
-- `CandidateProfile->profile_image_url`, `Position->image_url`, `Position->company_logo_url`, `Position->salary_range` are accessor attributes. The image ones prepend `asset('storage/...')` — they need the storage symlink to work.
-- `Position` fields: `title`, `description`, `requirements`, `location`, `company_name`, `salary_min` + `salary_max` + `salary_currency` (nullable), `employment_type` (enum: full_time/part_time/internship/contract), `modality` (enum: on_site/remote/hybrid), `status` (enum: open/closed/draft). **There is no `is_active` — it was replaced by `status` in April 2026.** Public pages filter by `status = 'open'`.
+- **`Client`** — tenant model (a client company). `hasMany` users (HR admins), `hasMany` positions. Soft-deleted; deleting a client cascades to its positions via the `booted()` hook but leaves applications intact as historical record. Fields: `name`, `slug` (unique), `industry`, `logo`, `is_active`.
+- **`User`** — role column is now a plain string (no enum constraint in the DB), cast to `UserRole` enum at the model layer: `candidate` / `hr_admin` / `super_admin`. `client_id` is nullable — set for HR admins, null for candidates and super admins.
+  - Helpers: `isCandidate()`, `isHrAdmin()`, `isSuperAdmin()`, `isAdmin()` (broad — either admin tier).
+  - `hasOne CandidateProfile`, `belongsTo Client`, etc.
+- **`Position`** `belongsTo Client` (required). `hasMany Application`. Soft-deleted.
+- `Referral` is standalone; references `User` as referrer / referred.
+- Enums in `app/Enums/`: `UserRole`, `ApplicationStatus`, `InterviewType`, `Gender`, `ReferralStatus`, `PositionStatus`, `EmploymentType`, `Modality`.
+- `CandidateProfile->skills` is a JSON column cast to `array`.
+- `CandidateProfile->profile_image_url`, `Position->image_url`, `Position->company_logo_url`, `Position->salary_range`, `Client->logo_url` are accessor attributes. The image URLs prepend `asset('storage/...')` — they need the storage symlink to work.
+- `Position` fields: `client_id` (required), `title`, `description`, `requirements`, `location`, `company_name`, `salary_min` + `salary_max` + `salary_currency` (nullable), `employment_type` (enum: full_time/part_time/internship/contract), `modality` (enum: on_site/remote/hybrid), `status` (enum: open/closed/draft). **There is no `is_active` — it was replaced by `status` in April 2026.** Public pages filter by `status = 'open'`.
+
+### Client scoping (Tier C, April 2026)
+
+The `ScopesToClient` trait in `app/Http/Controllers/Admin/Concerns/` is the single source of truth for how admin controllers filter by client:
+
+```php
+$clientId = $this->activeClientId($user, $request->integer('client_id') ?: null);
+// HR Admin  → always $user->client_id (the URL filter is ignored)
+// Super Admin → $request->integer('client_id') or null (show-everything)
+
+$this->userOwnsClient($user, $clientId)   // ACL check for show/update/destroy
+$this->activeClient($user, $requestedId)  // returns the Client model for banner rendering
+```
+
+**Every admin controller that touches `Position`, `Application`, `Interview`, `CandidateProfile`, or `StatsService` uses this trait** to scope list queries and authorize single-record operations. When you add a new admin controller, add the trait + the scoping helper calls; don't reinvent the pattern.
+
+For candidates: HR admins only see the candidates who have applied to their client (`whereHas('applications.position', ...)`) and only those applications are shown on the detail page — cross-client applications are hidden even if a candidate applied elsewhere too.
+
+`StatsService::getStats(?int $clientId = null)` follows the same contract: null = platform-wide, integer = scope to that client.
 
 ## File storage
 
@@ -149,8 +176,12 @@ php artisan serve                     # another terminal
 
 Seed accounts (all password `password`):
 
-- Admin: `admin@seekrecruit.com`, `maria@seekrecruit.com`
-- Candidates: `juan@example.com`, `ana@example.com`, `carlos@example.com`, `sofia@example.com`, `diego@example.com`, `laura@example.com`, `roberto@example.com`
+- **Super Admin** (platform-wide): `admin@seekrecruit.com`
+- **HR Admins** (one per seed client):
+  - `maria@seekrecruit.com` → JAE Tijuana
+  - `jorge@acme.com` → Acme Engineering
+  - `elena@tjelectronics.com` → Tijuana Electronics
+- **Candidates**: `juan@example.com`, `ana@example.com`, `carlos@example.com`, `sofia@example.com`, `diego@example.com`, `laura@example.com`, `roberto@example.com`
 
 ## Conventions and gotchas
 
@@ -160,6 +191,9 @@ Seed accounts (all password `password`):
 - **Toast messages are opinionated keys.** Use `success`, `error`, `warning`, `info`, or `status`. Anything else won't render.
 - **Don't reintroduce Sanctum or Fortify.** They were ripped out intentionally (they were causing route collisions and unused overhead). If you need API auth later, build it deliberately under a separate guard.
 - **Don't return JSON.** See above. No API surface.
+- **Don't introduce a global scope on Position/Application/etc.** to enforce client tenancy. It's tempting but brittle — you'll forget to override it exactly when you need unfiltered access (e.g. Super Admin views). Keep scoping explicit via `ScopesToClient`.
+- **Super Admin client filter is `?client_id=X` on the URL, not a session variable.** A URL is always the source of truth for what's being viewed. If you find yourself wanting session persistence, document the trade-off before adding it.
+- **HR Admin `client_id` is enforced server-side** in `PositionRequest::prepareForValidation` and in controller `store`/`update` methods — never trust a submitted `client_id` from an HR admin form.
 - **`CandidateProfile` columns `university`, `degree`, `location`, `gender` are NOT NULL** in the migration. `RegisterController` initializes them to empty strings on signup so the NOT NULL doesn't trip. `UpdateProfileRequest` enforces them as `required` once the candidate edits their profile.
 - **CORS middleware is still there** (`config/cors.php`) but there are no cross-origin callers; it's just default Laravel. Ignore unless you reintroduce an API.
 - **The `Notifications/*` classes are not wired up.** `ApplicationReceived`, `ApplicationStatusChanged`, `InterviewScheduled`, `ReferralInvite` exist as `ShouldQueue` classes but nothing dispatches them. If you wire email, hook them into `Admin/ApplicationController::updateStatus`, `Admin/InterviewController::store`, `Candidate/ApplicationController::store`, and `Candidate/ReferralController::store` respectively.

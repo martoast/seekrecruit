@@ -15,8 +15,8 @@ Not a generic job board — it's a recruitment operating system built for the ma
 | User type | Access | Main function | Current status |
 |---|---|---|---|
 | Candidate | Public site | Register, build profile, apply to openings, track their own process | ✅ |
-| HR Admin / Director | Admin panel | Manage openings, review candidates, move pipeline, schedule interviews | 🟡 — role exists (`jae_staff`), but no concept of **per-client** admin scoping |
-| Super Admin (S&R) | Full admin panel | Full platform control, configuration, client management | ❌ — no separate tier; `jae_staff` has everything |
+| HR Admin / Director | Admin panel | Manage openings, review candidates, move pipeline, schedule interviews | ✅ — `hr_admin` role, scoped to a single `Client` (Sprint 2) |
+| Super Admin (S&R) | Full admin panel | Full platform control, configuration, client management | ✅ — `super_admin` role with `Client` + HR Admin CRUD (Sprint 2) |
 
 ---
 
@@ -209,12 +209,12 @@ Grouped by effort and dependency order:
 5. Public positions list filters by `status = 'open'` instead of `is_active = true`
 6. Quick status toggle on positions index (no full form submit)
 
-### Tier C — Role model expansion (one day)
-1. Split `jae_staff` into two tiers: add `UserRole::SUPER_ADMIN`
-2. Introduce a `Client` model (tenant) — `hasMany` Users (admins), Positions, Applications
-3. Add `client_id` to `Position` and scope admin queries per client
-4. Super Admin sees everything; HR Admin sees only their client
-5. Client switcher / client management pages for Super Admin
+### Tier C — Role model expansion ✅ (Sprint 2 — shipped)
+1. ✅ Split `jae_staff` into `hr_admin` + `super_admin` (enum renamed; users.role column is now a string)
+2. ✅ Introduced `Client` tenant model (soft-deleted, cascades to positions)
+3. ✅ Added `client_id` to `users` + `positions`; query scoping via `ScopesToClient` trait
+4. ✅ Super Admin sees everything (`?client_id=X` URL filter); HR Admin locked to their client
+5. ✅ Client CRUD + HR Admin CRUD pages for Super Admin, role-gated sidebar, dashboard banner
 
 ### Tier D — Analytics dashboard (1–2 weeks)
 Build the **calculable** metrics first, then layer on ML later.

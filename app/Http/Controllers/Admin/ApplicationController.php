@@ -10,6 +10,7 @@ use App\Models\ApplicationNote;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ApplicationController extends Controller
 {
@@ -45,7 +46,19 @@ class ApplicationController extends Controller
 
         $applications = $query->latest()->paginate(15)->withQueryString();
 
-        return view('admin.applications.index', compact('applications'));
+        $byStatus = Application::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        $stats = [
+            'total' => array_sum($byStatus),
+            'pending' => ($byStatus['registered'] ?? 0) + ($byStatus['preselected'] ?? 0),
+            'in_interview' => $byStatus['interview'] ?? 0,
+            'hired' => $byStatus['hired'] ?? 0,
+        ];
+
+        return view('admin.applications.index', compact('applications', 'stats'));
     }
 
     public function show(Application $application): View

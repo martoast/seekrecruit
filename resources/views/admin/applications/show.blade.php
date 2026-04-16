@@ -115,10 +115,10 @@
                     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                             <h2 class="text-lg font-semibold text-gray-900">Interviews</h2>
-                            <a href="{{ route('admin.interviews.index') }}" class="text-sm font-medium text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5">
+                            <button type="button" data-open-schedule-modal class="text-sm font-medium text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                                 Schedule
-                            </a>
+                            </button>
                         </div>
                         @if ($application->interviews->count())
                             <div class="divide-y divide-gray-100">
@@ -148,9 +148,9 @@
                         @else
                             <div class="p-8 text-center">
                                 <p class="text-sm text-gray-500 mb-3">No interviews scheduled yet</p>
-                                <a href="{{ route('admin.interviews.index') }}">
-                                    <x-ui.button variant="primary" size="sm">Go to Interviews</x-ui.button>
-                                </a>
+                                <button type="button" data-open-schedule-modal>
+                                    <x-ui.button variant="primary" size="sm">Schedule Interview</x-ui.button>
+                                </button>
                             </div>
                         @endif
                     </div>
@@ -222,8 +222,16 @@
                             <p class="font-medium text-gray-900">{{ $application->position?->title }}</p>
                             <p class="text-sm text-gray-500 mt-1">{{ $application->position?->location }}</p>
                             <div class="mt-3">
-                                <x-ui.badge :variant="$application->position?->is_active ? 'success' : 'default'">
-                                    {{ $application->position?->is_active ? 'Active' : 'Inactive' }}
+                                @php
+                                    $positionStatus = $application->position?->status?->value;
+                                    $positionVariant = match ($positionStatus) {
+                                        'open' => 'success',
+                                        'draft' => 'warning',
+                                        default => 'default',
+                                    };
+                                @endphp
+                                <x-ui.badge :variant="$positionVariant">
+                                    {{ ucfirst($positionStatus ?? 'unknown') }}
                                 </x-ui.badge>
                             </div>
                         </div>
@@ -232,4 +240,53 @@
             </div>
         </div>
     </div>
+
+    {{-- Schedule Interview modal --}}
+    <div data-schedule-modal class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" data-close-modal></div>
+            <div class="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+                <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-900">Schedule Interview</h3>
+                    <button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('admin.interviews.store') }}" class="px-6 py-5 space-y-6">
+                    @csrf
+                    <input type="hidden" name="application_id" value="{{ $application->id }}" />
+
+                    <div class="p-4 bg-gray-50 rounded-xl text-sm text-gray-700">
+                        Scheduling interview for
+                        <span class="font-medium text-gray-900">{{ $application->candidate?->user?->name }}</span>
+                        —
+                        <span class="font-medium text-gray-900">{{ $application->position?->title }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <x-ui.input label="Date & Time" name="scheduled_at" type="datetime-local" required />
+                        <x-ui.select label="Interview Type" name="type" required
+                            :options="['technical' => 'Technical', 'hr' => 'HR', 'final' => 'Final']" />
+                    </div>
+                    <x-ui.input label="Location" name="location" placeholder="Conference Room A, Zoom link, etc." />
+                    <x-ui.textarea label="Internal Notes" name="notes" placeholder="Preparation notes..." :rows="3" />
+
+                    <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
+                        <button type="button" data-close-modal class="px-5 py-2.5 text-base rounded-xl font-medium bg-white text-primary-700 border-2 border-primary-200 hover:bg-primary-50">Cancel</button>
+                        <x-ui.button type="submit" variant="primary">Schedule Interview</x-ui.button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const modal = document.querySelector('[data-schedule-modal]');
+            const open = () => modal.classList.remove('hidden');
+            const close = () => modal.classList.add('hidden');
+            document.querySelectorAll('[data-open-schedule-modal]').forEach((b) => b.addEventListener('click', open));
+            modal.querySelectorAll('[data-close-modal]').forEach((b) => b.addEventListener('click', close));
+        })();
+    </script>
 @endsection

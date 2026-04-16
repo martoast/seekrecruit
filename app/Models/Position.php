@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\EmploymentType;
+use App\Enums\Modality;
+use App\Enums\PositionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +19,12 @@ class Position extends Model
         'description',
         'requirements',
         'location',
-        'is_active',
+        'salary_min',
+        'salary_max',
+        'salary_currency',
+        'employment_type',
+        'modality',
+        'status',
         'image',
         'company_name',
         'company_logo',
@@ -38,10 +46,34 @@ class Position extends Model
         return asset('storage/company-logos/' . $this->company_logo);
     }
 
+    public function getSalaryRangeAttribute(): ?string
+    {
+        if (is_null($this->salary_min) && is_null($this->salary_max)) {
+            return null;
+        }
+
+        $currency = $this->salary_currency ?? 'USD';
+
+        if ($this->salary_min && $this->salary_max) {
+            return '$' . number_format($this->salary_min) . ' – $' . number_format($this->salary_max) . ' ' . $currency;
+        }
+
+        $single = $this->salary_min ?? $this->salary_max;
+
+        return '$' . number_format($single) . ' ' . $currency;
+    }
+
+    public function isOpen(): bool
+    {
+        return $this->status === PositionStatus::OPEN;
+    }
+
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
+            'employment_type' => EmploymentType::class,
+            'modality' => Modality::class,
+            'status' => PositionStatus::class,
         ];
     }
 

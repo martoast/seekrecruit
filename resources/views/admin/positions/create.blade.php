@@ -23,8 +23,59 @@
                     <x-ui.input label="Position Title" name="title" placeholder="e.g., Junior Software Developer" required />
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <x-ui.input label="Location" name="location" placeholder="e.g., Tijuana, Remote" required />
+                        <x-ui.input label="Location" name="location" placeholder="e.g., Tijuana" required />
                         <x-ui.input label="Company / Organization Name" name="company_name" placeholder="e.g., Acme Corp" />
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <x-ui.select
+                            label="Employment Type"
+                            name="employment_type"
+                            required
+                            :value="old('employment_type', 'full_time')"
+                            :options="[
+                                'full_time' => 'Full-time',
+                                'part_time' => 'Part-time',
+                                'internship' => 'Internship',
+                                'contract' => 'Contract',
+                            ]"
+                        />
+                        <x-ui.select
+                            label="Work Modality"
+                            name="modality"
+                            required
+                            :value="old('modality', 'on_site')"
+                            :options="[
+                                'on_site' => 'On-site',
+                                'remote' => 'Remote',
+                                'hybrid' => 'Hybrid',
+                            ]"
+                        />
+                        <x-ui.select
+                            label="Status"
+                            name="status"
+                            required
+                            :value="old('status', 'open')"
+                            :options="[
+                                'open' => 'Open',
+                                'closed' => 'Closed',
+                                'draft' => 'Draft',
+                            ]"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <x-ui.input label="Salary Minimum" name="salary_min" type="number" placeholder="e.g., 30000" />
+                        <x-ui.input label="Salary Maximum" name="salary_max" type="number" placeholder="e.g., 45000" />
+                        <x-ui.select
+                            label="Currency"
+                            name="salary_currency"
+                            :value="old('salary_currency', 'MXN')"
+                            :options="[
+                                'MXN' => 'MXN (Mexican Peso)',
+                                'USD' => 'USD (US Dollar)',
+                            ]"
+                        />
                     </div>
 
                     <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
@@ -39,15 +90,6 @@
 
                     <x-ui.textarea label="Description" name="description" :rows="5" placeholder="Describe the position, responsibilities, and what the candidate will be working on..." required />
                     <x-ui.textarea label="Requirements" name="requirements" :rows="5" placeholder="List the required qualifications, skills, and experience..." required />
-
-                    <label class="flex items-start gap-3">
-                        <input type="hidden" name="is_active" value="0" />
-                        <input type="checkbox" name="is_active" value="1" checked class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1" />
-                        <div>
-                            <span class="text-sm font-medium text-gray-900">Active Position</span>
-                            <p class="text-sm text-gray-500">When enabled, this position will be visible to candidates and open for applications.</p>
-                        </div>
-                    </label>
                 </div>
 
                 <div class="px-6 py-4 bg-gray-50 flex flex-col-reverse sm:flex-row justify-end gap-3">

@@ -113,14 +113,13 @@ For flash feedback, controllers return `back()->with('success', 'Message')` or `
 
 ## Data model
 
-Unchanged from the API era:
-
 - `User` (role enum: `candidate` | `jae_staff`) `hasOne` `CandidateProfile` `hasMany` `Application` `belongsTo` `Position`, `hasMany` `Interview` + `ApplicationNote`
 - `Position` is soft-deleted (so existing applications survive)
 - `Referral` is standalone; references `User` as referrer / referred
-- Enums in `app/Enums/`: `UserRole`, `ApplicationStatus`, `InterviewType`, `Gender`, `ReferralStatus`
+- Enums in `app/Enums/`: `UserRole`, `ApplicationStatus`, `InterviewType`, `Gender`, `ReferralStatus`, `PositionStatus`, `EmploymentType`, `Modality`
 - `CandidateProfile->skills` is a JSON column cast to `array`
-- `CandidateProfile->profile_image_url`, `Position->image_url`, `Position->company_logo_url` are accessor attributes that prepend `asset('storage/...')` — so they need the storage symlink to work
+- `CandidateProfile->profile_image_url`, `Position->image_url`, `Position->company_logo_url`, `Position->salary_range` are accessor attributes. The image ones prepend `asset('storage/...')` — they need the storage symlink to work.
+- `Position` fields: `title`, `description`, `requirements`, `location`, `company_name`, `salary_min` + `salary_max` + `salary_currency` (nullable), `employment_type` (enum: full_time/part_time/internship/contract), `modality` (enum: on_site/remote/hybrid), `status` (enum: open/closed/draft). **There is no `is_active` — it was replaced by `status` in April 2026.** Public pages filter by `status = 'open'`.
 
 ## File storage
 

@@ -53,7 +53,17 @@ class CandidateController extends Controller
 
         $candidates = $query->paginate(15)->withQueryString();
 
-        return view('admin.candidates.index', compact('candidates'));
+        $stats = [
+            'total' => CandidateProfile::count(),
+            'with_cv' => CandidateProfile::whereNotNull('cv_path')->count(),
+            'universities' => CandidateProfile::whereNotNull('university')
+                ->where('university', '!=', '')
+                ->distinct()
+                ->count('university'),
+            'new_this_week' => CandidateProfile::where('created_at', '>=', now()->startOfWeek())->count(),
+        ];
+
+        return view('admin.candidates.index', compact('candidates', 'stats'));
     }
 
     public function show(CandidateProfile $candidate): View

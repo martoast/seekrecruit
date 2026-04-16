@@ -10,7 +10,7 @@
                     </svg>
                 </div>
             @endif
-            @if ($position->is_active)
+            @if ($position->isOpen())
                 <div class="absolute top-3 right-3">
                     <x-ui.badge variant="success" size="sm">Open</x-ui.badge>
                 </div>
@@ -53,6 +53,20 @@
                     </svg>
                     {{ $position->created_at->format('M j, Y') }}
                 </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700">
+                    {{ $position->modality?->label() ?? 'On-site' }}
+                </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700">
+                    {{ $position->employment_type?->label() ?? 'Full-time' }}
+                </span>
+                @if ($position->salary_range)
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                        {{ $position->salary_range }}
+                    </span>
+                @endif
             </div>
 
             <p class="text-gray-600 text-sm line-clamp-2 mb-4">

@@ -3,13 +3,16 @@
 @section('title', $position->title . ' - Seek & Recruit Network')
 
 @section('content')
+    @php
+        $isOpen = $position->isOpen();
+    @endphp
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
         @if ($position->image_url)
             <div class="relative h-64 sm:h-80 rounded-2xl overflow-hidden">
                 <img src="{{ $position->image_url }}" alt="{{ $position->title }}" class="w-full h-full object-cover" />
                 <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0 p-6">
-                    @if ($position->is_active)
+                    @if ($isOpen)
                         <x-ui.badge variant="success" class="mb-3">Open Position</x-ui.badge>
                     @endif
                     <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">{{ $position->title }}</h1>
@@ -54,11 +57,26 @@
                                 </div>
                             </div>
                         </div>
-                        @if ($position->is_active)
+                        @if ($isOpen)
                             <x-ui.badge variant="success">Open</x-ui.badge>
                         @endif
                     </div>
                 @endif
+
+                {{-- Meta chips: modality, employment type, salary --}}
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-50 text-primary-700 border border-primary-100">
+                        {{ $position->modality?->label() ?? 'On-site' }}
+                    </span>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-violet-50 text-violet-700 border border-violet-100">
+                        {{ $position->employment_type?->label() ?? 'Full-time' }}
+                    </span>
+                    @if ($position->salary_range)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            {{ $position->salary_range }}
+                        </span>
+                    @endif
+                </div>
 
                 @if ($position->company_name || $position->company_logo_url)
                     <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
@@ -79,7 +97,7 @@
                 @endif
 
                 @auth
-                    @if (auth()->user()->isCandidate() && $position->is_active)
+                    @if (auth()->user()->isCandidate() && $isOpen)
                         <div class="flex flex-wrap items-center gap-3">
                             @if ($hasApplied)
                                 <div class="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">

@@ -28,17 +28,59 @@
                         <x-ui.input label="Company / Organization Name" name="company_name" :value="$position->company_name" />
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <x-ui.select
+                            label="Employment Type"
+                            name="employment_type"
+                            required
+                            :value="old('employment_type', $position->employment_type?->value)"
+                            :options="[
+                                'full_time' => 'Full-time',
+                                'part_time' => 'Part-time',
+                                'internship' => 'Internship',
+                                'contract' => 'Contract',
+                            ]"
+                        />
+                        <x-ui.select
+                            label="Work Modality"
+                            name="modality"
+                            required
+                            :value="old('modality', $position->modality?->value)"
+                            :options="[
+                                'on_site' => 'On-site',
+                                'remote' => 'Remote',
+                                'hybrid' => 'Hybrid',
+                            ]"
+                        />
+                        <x-ui.select
+                            label="Status"
+                            name="status"
+                            required
+                            :value="old('status', $position->status?->value)"
+                            :options="[
+                                'open' => 'Open',
+                                'closed' => 'Closed',
+                                'draft' => 'Draft',
+                            ]"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <x-ui.input label="Salary Minimum" name="salary_min" type="number" :value="$position->salary_min" placeholder="e.g., 30000" />
+                        <x-ui.input label="Salary Maximum" name="salary_max" type="number" :value="$position->salary_max" placeholder="e.g., 45000" />
+                        <x-ui.select
+                            label="Currency"
+                            name="salary_currency"
+                            :value="old('salary_currency', $position->salary_currency ?? 'MXN')"
+                            :options="[
+                                'MXN' => 'MXN (Mexican Peso)',
+                                'USD' => 'USD (US Dollar)',
+                            ]"
+                        />
+                    </div>
+
                     <x-ui.textarea label="Description" name="description" :rows="5" :value="$position->description" required />
                     <x-ui.textarea label="Requirements" name="requirements" :rows="5" :value="$position->requirements" required />
-
-                    <label class="flex items-start gap-3">
-                        <input type="hidden" name="is_active" value="0" />
-                        <input type="checkbox" name="is_active" value="1" @checked($position->is_active) class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1" />
-                        <div>
-                            <span class="text-sm font-medium text-gray-900">Active Position</span>
-                            <p class="text-sm text-gray-500">When enabled, this position will be visible to candidates and open for applications.</p>
-                        </div>
-                    </label>
                 </div>
 
                 <div class="px-6 py-4 bg-gray-50 flex flex-col sm:flex-row justify-between gap-4">

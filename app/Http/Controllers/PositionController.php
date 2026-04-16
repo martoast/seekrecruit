@@ -10,7 +10,7 @@ class PositionController extends Controller
 {
     public function index(): View
     {
-        $positions = Position::where('is_active', true)
+        $positions = Position::where('status', 'open')
             ->latest()
             ->get();
 

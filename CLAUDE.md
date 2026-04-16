@@ -181,7 +181,9 @@ Seed accounts (all password `password`):
   - `maria@seekrecruit.com` → JAE Tijuana
   - `jorge@acme.com` → Acme Engineering
   - `elena@tjelectronics.com` → Tijuana Electronics
-- **Candidates**: `juan@example.com`, `ana@example.com`, `carlos@example.com`, `sofia@example.com`, `diego@example.com`, `laura@example.com`, `roberto@example.com`
+- **Candidates**: `juan@example.com`, `ana@example.com`, `carlos@example.com`, `sofia@example.com`, `diego@example.com`, `laura@example.com`, `roberto@example.com` + 15 more factory-generated candidates
+
+📖 **For the full testing guide aimed at non-developers** (what each account can do, suggested smoke-test flow, what's visible on the public site), point the team at [`TESTING.md`](TESTING.md) in the repo root. That file is written for QA — this one is written for engineers.
 
 ## Conventions and gotchas
 

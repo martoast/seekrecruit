@@ -91,7 +91,8 @@ class ApplicationController extends Controller
         $application->load('position');
         abort_unless($this->userOwnsClient($request->user(), $application->position?->client_id), 403);
 
-        $application->update(['status' => $request->string('status')]);
+        // input() returns a plain string — the enum cast rejects Stringable.
+        $application->update(['status' => $request->input('status')]);
 
         return back()->with('success', 'Application status updated successfully.');
     }

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +24,16 @@ class AppServiceProvider extends ServiceProvider
                 'token' => $token,
                 'email' => $notifiable->getEmailForPasswordReset(),
             ]);
+        });
+
+        // When an authenticated user hits a guest-only route (login/register/etc),
+        // send them to their role's landing page instead of the default "/".
+        RedirectIfAuthenticated::redirectUsing(function ($request) {
+            $user = $request->user();
+
+            return $user && $user->isAdmin()
+                ? route('admin.dashboard')
+                : route('candidate.dashboard');
         });
     }
 }

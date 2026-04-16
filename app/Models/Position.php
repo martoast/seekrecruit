@@ -7,6 +7,7 @@ use App\Enums\Modality;
 use App\Enums\PositionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,6 +16,7 @@ class Position extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'client_id',
         'title',
         'description',
         'requirements',
@@ -80,5 +82,10 @@ class Position extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 }

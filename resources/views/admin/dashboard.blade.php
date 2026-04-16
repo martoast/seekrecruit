@@ -21,6 +21,29 @@
     @endphp
 
     <div class="min-h-screen">
+        @if (!empty($activeClient))
+            <div class="mb-6 flex items-center justify-between gap-3 p-4 bg-primary-50 border border-primary-100 rounded-xl">
+                <div class="flex items-center gap-3">
+                    @if ($activeClient->logo_url)
+                        <img src="{{ $activeClient->logo_url }}" alt="{{ $activeClient->name }}" class="w-10 h-10 rounded-lg object-contain bg-white border border-gray-100 p-1" />
+                    @else
+                        <div class="w-10 h-10 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
+                            {{ strtoupper(mb_substr($activeClient->name, 0, 2)) }}
+                        </div>
+                    @endif
+                    <div>
+                        <p class="text-xs text-primary-700 uppercase tracking-wide font-medium">Viewing</p>
+                        <p class="font-semibold text-gray-900">{{ $activeClient->name }}</p>
+                    </div>
+                </div>
+                @if (auth()->user()->isSuperAdmin())
+                    <a href="{{ route('admin.dashboard') }}" class="text-sm font-medium text-primary-700 hover:text-primary-800">
+                        Show all clients →
+                    </a>
+                @endif
+            </div>
+        @endif
+
         <div class="mb-8">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">

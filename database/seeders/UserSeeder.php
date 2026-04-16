@@ -205,5 +205,13 @@ class UserSeeder extends Seeder
                 ...$data['profile'],
             ]);
         }
+
+        // Factory-generate 15 additional candidates with varied profiles so the
+        // demo has real pipeline depth (filters, pagination, KPIs have signal).
+        User::factory()
+            ->count(15)
+            ->candidate()
+            ->has(CandidateProfile::factory(), 'candidateProfile')
+            ->create();
     }
 }

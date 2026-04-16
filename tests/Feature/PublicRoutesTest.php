@@ -46,9 +46,11 @@ class PublicRoutesTest extends TestCase
     {
         // Draft status hides from listing but detail page still renders —
         // candidates won't find it unless sent a direct link.
-        $this->get('/positions/7')
+        $draft = \App\Models\Position::where('status', 'draft')->firstOrFail();
+
+        $this->get("/positions/{$draft->id}")
             ->assertOk()
-            ->assertSeeText('Data Analyst');
+            ->assertSeeText($draft->title);
     }
 
     public function test_login_page_loads(): void

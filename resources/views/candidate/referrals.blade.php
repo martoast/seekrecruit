@@ -67,12 +67,25 @@
                 <div class="space-y-3">
                     @foreach ($referrals as $referral)
                         <x-ui.card padding="md">
-                            <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-gray-900">{{ $referral->referred_email }}</p>
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $referral->referred_email }}</p>
                                     <p class="text-xs text-gray-500 mt-0.5">Sent {{ $referral->created_at->diffForHumans() }}</p>
                                 </div>
-                                <x-ui.status-badge :status="$referral->status" type="referral" size="sm" />
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <x-ui.status-badge :status="$referral->status" type="referral" size="sm" />
+                                    @if ($referral->status === \App\Enums\ReferralStatus::PENDING)
+                                        <form method="POST" action="{{ route('candidate.referrals.resend', $referral) }}">
+                                            @csrf
+                                            <x-ui.button type="submit" variant="secondary" size="sm">Resend</x-ui.button>
+                                        </form>
+                                        <form method="POST" action="{{ route('candidate.referrals.destroy', $referral) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <x-ui.button type="submit" variant="danger" size="sm">Cancel</x-ui.button>
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
                         </x-ui.card>
                     @endforeach

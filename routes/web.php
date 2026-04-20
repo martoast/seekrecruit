@@ -63,6 +63,8 @@ Route::middleware(['auth', 'role:candidate'])
 
         Route::get('/referrals', [CandidateReferralController::class, 'index'])->name('referrals.index');
         Route::post('/referrals', [CandidateReferralController::class, 'store'])->name('referrals.store');
+        Route::post('/referrals/{referral}/resend', [CandidateReferralController::class, 'resend'])->name('referrals.resend');
+        Route::delete('/referrals/{referral}', [CandidateReferralController::class, 'destroy'])->name('referrals.destroy');
     });
 
 // Admin area — HR Admin + Super Admin

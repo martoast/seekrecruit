@@ -8,4 +8,5 @@ enum ReferralStatus: string
     case REGISTERED = 'registered';
     case HIRED = 'hired';
     case REWARDED = 'rewarded';
+    case CANCELLED = 'cancelled';
 }

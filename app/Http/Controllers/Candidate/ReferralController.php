@@ -50,4 +50,27 @@ class ReferralController extends Controller
 
         return back()->with('success', 'Referral invitation sent successfully.');
     }
+
+    public function resend(Request $request, Referral $referral): RedirectResponse
+    {
+        abort_unless($referral->referrer_id === $request->user()->id, 403);
+
+        \Notification::route('mail', $referral->referred_email)
+            ->notify(new ReferralInvite(
+                $request->user()->name,
+                route('register')
+            ));
+
+        return back()->with('success', 'Referral invitation resent to ' . $referral->referred_email . '.');
+    }
+
+    public function destroy(Request $request, Referral $referral): RedirectResponse
+    {
+        abort_unless($referral->referrer_id === $request->user()->id, 403);
+        abort_unless($referral->status === ReferralStatus::PENDING, 403);
+
+        $referral->update(['status' => ReferralStatus::CANCELLED]);
+
+        return back()->with('success', 'Referral cancelled.');
+    }
 }

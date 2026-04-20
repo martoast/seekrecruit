@@ -4,174 +4,130 @@
 
 @section('content')
     <div class="overflow-hidden">
+
         {{-- Hero --}}
-        <section class="relative min-h-screen bg-dark-500 overflow-hidden">
-            <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full border border-primary-500/20 animate-[float_20s_ease-in-out_infinite]"></div>
-                <div class="absolute top-1/2 -left-24 w-[400px] h-[400px] rounded-full bg-primary-500/5 animate-[float_15s_ease-in-out_infinite]" style="animation-delay: -5s;"></div>
-                <div class="absolute bottom-32 right-1/4 w-32 h-32 rounded-full bg-accent-green/10 animate-[float_12s_ease-in-out_infinite]" style="animation-delay: -2s;"></div>
-                <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-                <div class="absolute inset-0 bg-linear-to-br from-dark-500 via-dark-500/95 to-primary-900/30"></div>
-            </div>
-
-            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32 lg:pt-32 lg:pb-40">
-                <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[70vh]">
-                    <div class="space-y-8">
-                        <span class="inline-flex items-center gap-2 text-primary-300 text-sm font-medium tracking-wider uppercase">
-                            <span class="w-8 h-px bg-primary-400"></span>
-                            Recruitment Reimagined
-                        </span>
-
-                        <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.1] tracking-tight font-bold">
-                            Where Talent
-                            <span class="block text-primary-400">Meets Opportunity</span>
-                        </h1>
-
-                        <p class="text-lg sm:text-xl text-gray-300 max-w-xl leading-relaxed">
-                            Join a curated network of professionals and connect with companies
-                            that value what you bring to the table. Your next chapter starts here.
-                        </p>
-
-                        <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                            <a href="{{ route('register') }}">
-                                <x-ui.button variant="primary" size="lg" class="w-full sm:w-auto">
-                                    Start Your Journey
-                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </x-ui.button>
-                            </a>
-                            <a href="{{ route('positions.index') }}">
-                                <x-ui.button variant="ghost" size="lg" class="w-full sm:w-auto text-white border border-white/20 hover:bg-white/10 hover:border-white/40">
-                                    View Open Positions
-                                </x-ui.button>
-                            </a>
-                        </div>
-
-                        <div class="flex items-center gap-6 pt-8">
-                            <div class="flex -space-x-3">
-                                <div class="w-10 h-10 rounded-full bg-linear-to-br from-primary-400 to-primary-600 border-2 border-dark-500 flex items-center justify-center text-white text-xs font-bold">JD</div>
-                                <div class="w-10 h-10 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 border-2 border-dark-500 flex items-center justify-center text-white text-xs font-bold">MK</div>
-                                <div class="w-10 h-10 rounded-full bg-linear-to-br from-amber-400 to-amber-600 border-2 border-dark-500 flex items-center justify-center text-white text-xs font-bold">AS</div>
-                                <div class="w-10 h-10 rounded-full bg-dark-400 border-2 border-dark-500 flex items-center justify-center text-white text-xs font-medium">+2k</div>
-                            </div>
-                            <p class="text-sm text-gray-400">
-                                Trusted by <span class="text-white font-medium">2,000+</span> professionals
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="hidden lg:block relative">
-                        <div class="relative bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
-                            <div class="space-y-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-16 h-16 rounded-2xl bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-white font-semibold text-lg">Senior Product Designer</p>
-                                        <p class="text-gray-400">TechCorp Inc. · Remote</p>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="px-3 py-1 bg-primary-500/20 text-primary-300 text-sm rounded-full">Full-time</span>
-                                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-sm rounded-full">$120k - $160k</span>
-                                    <span class="px-3 py-1 bg-white/10 text-gray-300 text-sm rounded-full">Remote</span>
-                                </div>
-                                <div class="pt-4 border-t border-white/10">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2 text-accent-green">
-                                            <div class="w-2 h-2 rounded-full bg-accent-green"></div>
-                                            <span class="text-sm font-medium">Actively Hiring</span>
-                                        </div>
-                                        <span class="text-gray-400 text-sm">Posted 2h ago</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="absolute -top-6 -right-6 bg-white rounded-2xl shadow-2xl p-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-accent-green/10 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-gray-900 font-medium text-sm">Application Sent!</p>
-                                    <p class="text-gray-500 text-xs">Just now</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="absolute -bottom-8 -left-8 bg-dark-400/80 backdrop-blur-sm rounded-2xl border border-white/10 p-5">
-                            <div class="flex items-center gap-4">
-                                <div class="text-center">
-                                    <p class="text-2xl font-bold text-white">94%</p>
-                                    <p class="text-xs text-gray-400">Success Rate</p>
-                                </div>
-                                <div class="w-px h-10 bg-white/20"></div>
-                                <div class="text-center">
-                                    <p class="text-2xl font-bold text-accent-green">48h</p>
-                                    <p class="text-xs text-gray-400">Avg. Response</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <section class="bg-gray-900 py-24 px-4">
+            <div class="max-w-4xl mx-auto text-center space-y-8">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                    Where Talent Meets<br>
+                    <span class="text-primary-400">Opportunity</span>
+                </h1>
+                <p class="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                    Seek & Recruit connects job seekers with companies hiring in Baja California.
+                    Build your profile, apply to curated positions, learn new skills, and get referred by people in your network.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                    <a href="{{ route('register') }}">
+                        <x-ui.button variant="primary" size="lg">Create Your Profile</x-ui.button>
+                    </a>
+                    <a href="{{ route('positions.index') }}">
+                        <x-ui.button variant="ghost" size="lg" class="text-white border border-white/20 hover:bg-white/10">
+                            Browse Open Positions
+                        </x-ui.button>
+                    </a>
                 </div>
             </div>
-
-            <div class="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-white to-transparent"></div>
         </section>
 
-        {{-- Stats Section --}}
-        <section class="relative bg-white py-16 -mt-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl lg:text-6xl font-light text-dark-500 mb-2">
-                            2k<span class="text-primary-500">+</span>
-                        </p>
-                        <p class="text-gray-500 text-sm uppercase tracking-wider">Active Candidates</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl lg:text-6xl font-light text-dark-500 mb-2">
-                            150<span class="text-primary-500">+</span>
-                        </p>
-                        <p class="text-gray-500 text-sm uppercase tracking-wider">Partner Companies</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl lg:text-6xl font-light text-dark-500 mb-2">
-                            94<span class="text-primary-500">%</span>
-                        </p>
-                        <p class="text-gray-500 text-sm uppercase tracking-wider">Match Success</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl lg:text-6xl font-light text-dark-500 mb-2">
-                            48<span class="text-primary-500">h</span>
-                        </p>
-                        <p class="text-gray-500 text-sm uppercase tracking-wider">Avg. Response</p>
-                    </div>
+        {{-- How it works --}}
+        <section class="bg-white py-24 px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
+                    <p class="text-gray-500 mt-3 text-lg">Get hired in four simple steps</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    @foreach ([
+                        ['step' => '1', 'title' => 'Create Your Profile', 'desc' => 'Sign up and fill out your candidate profile — experience, skills, education, and a professional photo.'],
+                        ['step' => '2', 'title' => 'Apply to Positions', 'desc' => 'Browse open positions and apply directly. Companies review your profile and reach out if there\'s a fit.'],
+                        ['step' => '3', 'title' => 'Learn & Earn Badges', 'desc' => 'Complete free lessons on software, sales, and personal development. Badges show up on your profile.'],
+                        ['step' => '4', 'title' => 'Get Referred', 'desc' => 'People in your network can refer you directly to companies, giving your application a boost.'],
+                    ] as $item)
+                        <div class="text-center space-y-4">
+                            <div class="w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold text-lg flex items-center justify-center mx-auto">
+                                {{ $item['step'] }}
+                            </div>
+                            <h3 class="font-semibold text-gray-900 text-lg">{{ $item['title'] }}</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed">{{ $item['desc'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        {{-- Features --}}
+        <section class="bg-gray-50 py-24 px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-gray-900">Everything You Need</h2>
+                    <p class="text-gray-500 mt-3 text-lg">One platform for candidates and companies</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @foreach ([
+                        [
+                            'title' => 'Candidate Profiles',
+                            'desc' => 'Showcase your skills, upload your CV, add a profile photo, and let companies find you.',
+                            'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+                        ],
+                        [
+                            'title' => 'Curated Job Positions',
+                            'desc' => 'Companies post open roles with salary, location, and modality. You apply with one click.',
+                            'icon' => 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+                        ],
+                        [
+                            'title' => 'Lessons & Badges',
+                            'desc' => 'Free video lessons on software, sales, and career development. Complete them and earn badges on your profile.',
+                            'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                        ],
+                        [
+                            'title' => 'Referral Program',
+                            'desc' => 'Refer friends to the platform. When they get hired, everyone wins.',
+                            'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+                        ],
+                        [
+                            'title' => 'Interview Scheduling',
+                            'desc' => 'HR admins schedule and track interviews directly in the platform, keeping everything in one place.',
+                            'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                        ],
+                        [
+                            'title' => 'Application Tracking',
+                            'desc' => 'Candidates see the status of every application in real time. No more wondering where things stand.',
+                            'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                        ],
+                    ] as $feature)
+                        <div class="bg-white rounded-2xl p-6 space-y-4 shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $feature['icon'] }}"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-semibold text-gray-900">{{ $feature['title'] }}</h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">{{ $feature['desc'] }}</p>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </section>
 
         {{-- CTA --}}
-        <section class="bg-gray-50 py-20">
-            <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-                <h2 class="text-3xl sm:text-4xl font-bold text-dark-500 mb-4">Ready to find your next opportunity?</h2>
-                <p class="text-lg text-gray-600 mb-8">Create your profile in minutes and start applying to curated positions today.</p>
+        <section class="bg-primary-600 py-20 px-4">
+            <div class="max-w-3xl mx-auto text-center space-y-6">
+                <h2 class="text-3xl font-bold text-white">Ready to get started?</h2>
+                <p class="text-primary-100 text-lg">Create your free profile and start applying to open positions today.</p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="{{ route('register') }}">
-                        <x-ui.button variant="primary" size="lg">Get Started Free</x-ui.button>
+                        <x-ui.button variant="ghost" size="lg" class="bg-white text-primary-700 hover:bg-primary-50 border-0">
+                            Create Free Profile
+                        </x-ui.button>
                     </a>
-                    <a href="{{ route('positions.index') }}">
-                        <x-ui.button variant="secondary" size="lg">Browse Positions</x-ui.button>
+                    <a href="{{ route('lessons.index') }}">
+                        <x-ui.button variant="ghost" size="lg" class="text-white border border-white/30 hover:bg-white/10">
+                            Explore Lessons
+                        </x-ui.button>
                     </a>
                 </div>
             </div>
         </section>
+
     </div>
 @endsection

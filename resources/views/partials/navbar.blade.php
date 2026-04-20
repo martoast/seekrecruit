@@ -9,9 +9,7 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <a href="{{ route('home') }}" class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-linear-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
-                        <span class="text-white font-bold text-xl">S&R</span>
-                    </div>
+                    <img src="{{ asset('images/logo.png') }}" alt="Seek & Recruit" class="w-10 h-10 object-contain">
                     <span class="text-xl font-bold text-gray-900 hidden sm:block">Seek & Recruit</span>
                 </a>
 

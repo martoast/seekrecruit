@@ -6,13 +6,13 @@
     <div class="overflow-hidden">
 
         {{-- Hero --}}
-        <section class="bg-gray-900 py-24 px-4">
+        <section class="bg-dark-500 py-24 px-4">
             <div class="max-w-4xl mx-auto text-center space-y-8">
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
                     Where Talent Meets<br>
                     <span class="text-primary-400">Opportunity</span>
                 </h1>
-                <p class="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                <p class="text-xl text-dark-100 max-w-2xl mx-auto leading-relaxed">
                     Seek & Recruit connects job seekers with companies hiring in Baja California.
                     Build your profile, apply to curated positions, learn new skills, and get referred by people in your network.
                 </p>
@@ -21,9 +21,7 @@
                         <x-ui.button variant="primary" size="lg">Create Your Profile</x-ui.button>
                     </a>
                     <a href="{{ route('positions.index') }}">
-                        <x-ui.button variant="ghost" size="lg" class="text-white border border-white/20 hover:bg-white/10">
-                            Browse Open Positions
-                        </x-ui.button>
+                        <x-ui.button variant="secondary" size="lg">Browse Open Positions</x-ui.button>
                     </a>
                 </div>
             </div>
@@ -33,7 +31,7 @@
         <section class="bg-white py-24 px-4">
             <div class="max-w-5xl mx-auto">
                 <div class="text-center mb-16">
-                    <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
+                    <h2 class="text-3xl font-bold text-dark-500">How It Works</h2>
                     <p class="text-gray-500 mt-3 text-lg">Get hired in four simple steps</p>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -47,7 +45,7 @@
                             <div class="w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold text-lg flex items-center justify-center mx-auto">
                                 {{ $item['step'] }}
                             </div>
-                            <h3 class="font-semibold text-gray-900 text-lg">{{ $item['title'] }}</h3>
+                            <h3 class="font-semibold text-dark-500 text-lg">{{ $item['title'] }}</h3>
                             <p class="text-gray-500 text-sm leading-relaxed">{{ $item['desc'] }}</p>
                         </div>
                     @endforeach
@@ -56,10 +54,10 @@
         </section>
 
         {{-- Features --}}
-        <section class="bg-gray-50 py-24 px-4">
+        <section class="bg-primary-50 py-24 px-4">
             <div class="max-w-5xl mx-auto">
                 <div class="text-center mb-16">
-                    <h2 class="text-3xl font-bold text-gray-900">Everything You Need</h2>
+                    <h2 class="text-3xl font-bold text-dark-500">Everything You Need</h2>
                     <p class="text-gray-500 mt-3 text-lg">One platform for candidates and companies</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -95,13 +93,13 @@
                             'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
                         ],
                     ] as $feature)
-                        <div class="bg-white rounded-2xl p-6 space-y-4 shadow-sm">
-                            <div class="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                        <div class="bg-white rounded-2xl p-6 space-y-4 shadow-sm border border-primary-100">
+                            <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
                                 <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $feature['icon'] }}"/>
                                 </svg>
                             </div>
-                            <h3 class="font-semibold text-gray-900">{{ $feature['title'] }}</h3>
+                            <h3 class="font-semibold text-dark-500">{{ $feature['title'] }}</h3>
                             <p class="text-sm text-gray-500 leading-relaxed">{{ $feature['desc'] }}</p>
                         </div>
                     @endforeach
@@ -110,20 +108,16 @@
         </section>
 
         {{-- CTA --}}
-        <section class="bg-primary-600 py-20 px-4">
+        <section class="bg-dark-500 py-20 px-4">
             <div class="max-w-3xl mx-auto text-center space-y-6">
                 <h2 class="text-3xl font-bold text-white">Ready to get started?</h2>
-                <p class="text-primary-100 text-lg">Create your free profile and start applying to open positions today.</p>
+                <p class="text-dark-100 text-lg">Create your free profile and start applying to open positions today.</p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="{{ route('register') }}">
-                        <x-ui.button variant="ghost" size="lg" class="bg-white text-primary-700 hover:bg-primary-50 border-0">
-                            Create Free Profile
-                        </x-ui.button>
+                        <x-ui.button variant="primary" size="lg">Create Free Profile</x-ui.button>
                     </a>
                     <a href="{{ route('lessons.index') }}">
-                        <x-ui.button variant="ghost" size="lg" class="text-white border border-white/30 hover:bg-white/10">
-                            Explore Lessons
-                        </x-ui.button>
+                        <x-ui.button variant="secondary" size="lg">Explore Lessons</x-ui.button>
                     </a>
                 </div>
             </div>

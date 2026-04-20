@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Candidate\UpdateProfileRequest;
 use App\Http\Requests\Candidate\UploadCvRequest;
 use App\Http\Requests\Candidate\UploadProfileImageRequest;
+use App\Models\LessonCompletion;
 use App\Services\CvStorageService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -21,8 +22,12 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         $profile = $request->user()->candidateProfile;
+        $completions = LessonCompletion::where('user_id', $request->user()->id)
+            ->with('lesson')
+            ->latest()
+            ->get();
 
-        return view('candidate.profile', compact('profile'));
+        return view('candidate.profile', compact('profile', 'completions'));
     }
 
     public function update(UpdateProfileRequest $request): RedirectResponse

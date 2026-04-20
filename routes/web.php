@@ -16,7 +16,9 @@ use App\Http\Controllers\Candidate\DashboardController as CandidateDashboardCont
 use App\Http\Controllers\Candidate\ProfileController as CandidateProfileController;
 use App\Http\Controllers\Candidate\ReferralController as CandidateReferralController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LessonController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use Illuminate\Support\Facades\Route;
 
 // Public
@@ -24,6 +26,17 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/positions', [PositionController::class, 'index'])->name('positions.index');
 Route::get('/positions/{position}', [PositionController::class, 'show'])->name('positions.show');
+
+Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
+Route::get('/lessons/{slug}', [LessonController::class, 'show'])->name('lessons.show');
+
+// Authenticated lesson interactions (candidates + admins)
+Route::middleware('auth')->group(function () {
+    Route::post('/lessons/{slug}/complete', [LessonController::class, 'complete'])->name('lessons.complete');
+    Route::post('/lessons/{slug}/comments', [LessonController::class, 'storeComment'])->name('lessons.comments.store');
+    Route::post('/comments/{comment}/like', [LessonController::class, 'toggleLike'])->name('lessons.comments.like');
+    Route::delete('/comments/{comment}', [LessonController::class, 'destroyComment'])->name('lessons.comments.destroy');
+});
 
 // Guest routes (auth)
 Route::middleware('guest')->group(function () {
@@ -87,6 +100,14 @@ Route::middleware(['auth', 'role:hr_admin,super_admin'])
         Route::post('/interviews', [AdminInterviewController::class, 'store'])->name('interviews.store');
         Route::put('/interviews/{interview}', [AdminInterviewController::class, 'update'])->name('interviews.update');
         Route::delete('/interviews/{interview}', [AdminInterviewController::class, 'destroy'])->name('interviews.destroy');
+
+        Route::get('/lessons', [AdminLessonController::class, 'index'])->name('lessons.index');
+        Route::get('/lessons/create', [AdminLessonController::class, 'create'])->name('lessons.create');
+        Route::post('/lessons', [AdminLessonController::class, 'store'])->name('lessons.store');
+        Route::get('/lessons/{lesson}/edit', [AdminLessonController::class, 'edit'])->name('lessons.edit');
+        Route::put('/lessons/{lesson}', [AdminLessonController::class, 'update'])->name('lessons.update');
+        Route::delete('/lessons/{lesson}', [AdminLessonController::class, 'destroy'])->name('lessons.destroy');
+        Route::delete('/lessons/{lesson}/attachments/{attachment}', [AdminLessonController::class, 'destroyAttachment'])->name('lessons.attachments.destroy');
 
         Route::get('/positions', [AdminPositionController::class, 'index'])->name('positions.index');
         Route::get('/positions/create', [AdminPositionController::class, 'create'])->name('positions.create');

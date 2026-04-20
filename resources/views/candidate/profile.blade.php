@@ -183,6 +183,29 @@
         </x-ui.card>
     </div>
 
+    {{-- Badges --}}
+    <x-ui.card padding="lg">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Lesson Badges</h2>
+            <a href="{{ route('lessons.index') }}" class="text-sm text-primary-600 hover:underline">Browse lessons →</a>
+        </div>
+        @if ($completions->isEmpty())
+            <p class="text-sm text-gray-500">No badges yet. Complete a lesson to earn one!</p>
+        @else
+            <div class="flex flex-wrap gap-3">
+                @foreach ($completions as $completion)
+                    <a href="{{ route('lessons.show', $completion->lesson->slug) }}"
+                       class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 hover:bg-green-100 transition-colors group">
+                        <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm font-medium text-green-800 group-hover:text-green-900">{{ $completion->lesson->title }}</span>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </x-ui.card>
+
     <script>
         (function () {
             const form = document.querySelector('[data-profile-form]');

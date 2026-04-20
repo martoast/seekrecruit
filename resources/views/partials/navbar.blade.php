@@ -22,6 +22,7 @@
                             <a href="{{ route('candidate.profile.edit') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium {{ request()->routeIs('candidate.profile.*') ? 'text-gray-900' : 'text-gray-600' }} hover:text-primary-600 transition-colors">Profile</a>
                             <a href="{{ route('candidate.applications.index') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium {{ request()->routeIs('candidate.applications.*') ? 'text-gray-900' : 'text-gray-600' }} hover:text-primary-600 transition-colors">Applications</a>
                             <a href="{{ route('positions.index') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium {{ request()->routeIs('positions.*') ? 'text-gray-900' : 'text-gray-600' }} hover:text-primary-600 transition-colors">Positions</a>
+                            <a href="{{ route('lessons.index') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium {{ request()->routeIs('lessons.*') ? 'text-gray-900' : 'text-gray-600' }} hover:text-primary-600 transition-colors">Lessons</a>
                             <a href="{{ route('candidate.referrals.index') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium {{ request()->routeIs('candidate.referrals.*') ? 'text-gray-900' : 'text-gray-600' }} hover:text-primary-600 transition-colors">Referrals</a>
                         @elseif ($user->isAdmin())
                             <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-primary-600 transition-colors">Dashboard</a>
@@ -30,6 +31,7 @@
                 @else
                     <div class="hidden md:ml-10 md:flex md:space-x-8">
                         <a href="{{ route('positions.index') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Positions</a>
+                        <a href="{{ route('lessons.index') }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Lessons</a>
                     </div>
                 @endauth
             </div>

@@ -1,0 +1,41 @@
+FROM php:8.4-cli
+
+LABEL maintainer="Henry / martoast"
+
+ARG WWWGROUP=1000
+WORKDIR /var/www/html
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install system deps + PHP extensions needed by Laravel
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    supervisor curl unzip gosu libcap2-bin \
+    default-mysql-client \
+    libpng-dev libzip-dev libonig-dev libxml2-dev libicu-dev \
+    && docker-php-ext-install \
+        pdo pdo_mysql mbstring zip gd bcmath xml intl pcntl \
+    && apt-get -y autoremove && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Allow PHP to bind port 80, and symlink to /usr/bin/php for supervisord.conf compat
+RUN setcap "cap_net_bind_service=+ep" /usr/local/bin/php \
+    && ln -s /usr/local/bin/php /usr/bin/php
+
+# Install Composer
+RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
+
+# Create sail user matching host UID
+RUN groupadd --force -g $WWWGROUP sail \
+    && useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
+
+COPY start.prod.sh /usr/local/bin/start-container
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN chmod +x /usr/local/bin/start-container
+
+EXPOSE 80
+
+ENTRYPOINT ["start-container"]

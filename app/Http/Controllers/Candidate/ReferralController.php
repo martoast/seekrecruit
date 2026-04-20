@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Candidate;
 use App\Enums\ReferralStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Referral;
+use App\Notifications\ReferralInvite;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Http\Request;
 
 class ReferralController extends Controller
@@ -39,6 +41,12 @@ class ReferralController extends Controller
             'referred_email' => $data['referred_email'],
             'status' => ReferralStatus::PENDING,
         ]);
+
+        \Notification::route('mail', $data['referred_email'])
+            ->notify(new ReferralInvite(
+                $request->user()->name,
+                route('register')
+            ));
 
         return back()->with('success', 'Referral invitation sent successfully.');
     }
